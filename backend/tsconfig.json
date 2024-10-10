@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "ES2020",                                /* Modern JavaScript version */
+    "module": "NodeNext",                              /* Use Node's native ESM (ES Modules) */
+    "moduleResolution": "NodeNext",                    /* Resolve modules in Node's way */
+    "esModuleInterop": true,                           /* Interoperability between CommonJS and ES modules */
+    "forceConsistentCasingInFileNames": true,          /* Ensure consistent casing in imports */
+    "skipLibCheck": true,                              /* Skip type checking for library files */
+    "strict": true,                                    /* Enable all strict type-checking options */
+
+    /* Emit */
+    "outDir": "./dist",                                /* Output directory for compiled files */
+    "resolveJsonModule": true,                         /* Enable importing .json files */
+    
+    /* Include TypeScript Support */
+    "typeRoots": ["./node_modules/@types"],            /* TypeScript type definitions */
+    "allowSyntheticDefaultImports": true,              /* Allow default imports from CommonJS modules */
+  },
+  "include": ["./**/*"],                           /* Include all TypeScript files in src folder */
+  "exclude": ["node_modules", "dist"]                  /* Exclude these folders from compilation */
+}
