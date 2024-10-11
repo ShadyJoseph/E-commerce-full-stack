@@ -2,7 +2,7 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy, Profile as GoogleProfile, VerifyCallback } from 'passport-google-oauth20';
 import { Strategy as InstagramStrategy, Profile as InstagramProfile } from 'passport-instagram';
 import dotenv from 'dotenv';
-import User, { IUser } from '../models/user'; // Import IUser interface
+import User, { IUser } from '../models/user';
 import logger from '../utils/logger';
 
 dotenv.config();

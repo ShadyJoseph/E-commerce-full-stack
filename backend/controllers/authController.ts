@@ -12,6 +12,11 @@ declare global {
   }
 }
 
+// Define constants for redirect URLs
+const REDIRECT_URL_HOME = '/';
+const REDIRECT_URL_DASHBOARD = '/api/dashboard'; // Updated route with '/api'
+const REDIRECT_URL_LOGIN = '/api/auth/login';
+
 // Google OAuth Authentication
 export const googleAuth = passport.authenticate('google', {
   scope: ['profile', 'email'],
@@ -19,15 +24,13 @@ export const googleAuth = passport.authenticate('google', {
 
 // Google OAuth Callback
 export const googleCallback = (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('google', {
-    failureRedirect: '/login',
-    session: true,
-  })(req, res, (err: Error) => {
+  passport.authenticate('google', { failureRedirect: REDIRECT_URL_LOGIN, session: true })(req, res, (err: Error) => {
     if (err) {
-      logger.error(`Google login error: ${err.message}`);
+      logger.error(`Google login error: ${err.message}`, { stack: err.stack });
       return next(err);
     }
-    res.redirect('/dashboard'); // Redirect to user dashboard after successful login
+    logger.info(`User ${req.user?.email} logged in via Google`);
+    res.redirect(REDIRECT_URL_DASHBOARD);
   });
 };
 
@@ -36,15 +39,13 @@ export const instagramAuth = passport.authenticate('instagram');
 
 // Instagram OAuth Callback
 export const instagramCallback = (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('instagram', {
-    failureRedirect: '/login',
-    session: true,
-  })(req, res, (err: Error) => {
+  passport.authenticate('instagram', { failureRedirect: REDIRECT_URL_LOGIN, session: true })(req, res, (err: Error) => {
     if (err) {
-      logger.error(`Instagram login error: ${err.message}`);
+      logger.error(`Instagram login error: ${err.message}`, { stack: err.stack });
       return next(err);
     }
-    res.redirect('/dashboard'); // Redirect after successful Instagram login
+    logger.info(`User ${req.user?.displayName} logged in via Instagram`);
+    res.redirect(REDIRECT_URL_DASHBOARD);
   });
 };
 
@@ -52,17 +53,19 @@ export const instagramCallback = (req: Request, res: Response, next: NextFunctio
 export const logout = (req: Request, res: Response, next: NextFunction) => {
   req.logout((err) => {
     if (err) {
-      logger.error(`Logout error: ${err.message}`);
+      logger.error(`Logout error: ${err.message}`, { stack: err.stack });
       return next(err);
     }
-    res.redirect('/'); // Redirect to homepage after logout
+    logger.info(`User ${req.user?.email || req.user?.displayName} logged out`);
+    res.redirect(REDIRECT_URL_HOME);
   });
 };
 
-// Optional: Ensure user is authenticated before accessing protected routes
+// Ensure user is authenticated before accessing protected routes
 export const ensureAuthenticated = (req: Request, res: Response, next: NextFunction) => {
   if (req.isAuthenticated()) {
     return next();
   }
-  res.redirect('/login'); // Redirect to login if not authenticated
+  logger.warn(`Unauthorized access attempt to ${req.originalUrl}`);
+  res.redirect(REDIRECT_URL_LOGIN); // Redirect to login if not authenticated
 };
