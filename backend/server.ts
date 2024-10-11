@@ -7,6 +7,7 @@ import connectDB from './config/db';
 import passport from './config/passportSetup'; // Fix the typo here
 import session from 'express-session';
 import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes'
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import MongoStore from 'connect-mongo';
@@ -54,7 +55,8 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // Routes
-app.use('/api', authRoutes); // Mounting the routes under /api
+app.use('/api', authRoutes); 
+app.use('/api/user', userRoutes); 
 
 // Error handling middleware
 app.use(errorHandler);

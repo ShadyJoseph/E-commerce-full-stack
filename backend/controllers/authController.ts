@@ -22,6 +22,11 @@ export const googleAuth = passport.authenticate('google', {
 
 // Google OAuth Callback
 export const googleCallback = (req: Request, res: Response, next: NextFunction) => {
+  // Ensure this route is not accessed directly
+  if (!req.user) {
+    return res.redirect('/api/auth/google');
+  }
+
   passport.authenticate('google', { failureRedirect: REDIRECT_URL_LOGIN, session: true })(req, res, (err: Error) => {
     if (err) {
       logger.error(`Google login error: ${err.message}`, { stack: err.stack });
@@ -31,6 +36,7 @@ export const googleCallback = (req: Request, res: Response, next: NextFunction) 
     res.redirect(REDIRECT_URL_DASHBOARD);
   });
 };
+
 
 // Logout Handler
 export const logout = (req: Request, res: Response, next: NextFunction) => {
@@ -42,13 +48,4 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
     logger.info(`User ${req.user?.email || req.user?.displayName} logged out`);
     res.redirect(REDIRECT_URL_HOME);
   });
-};
-
-// Ensure user is authenticated before accessing protected routes
-export const ensureAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  logger.warn(`Unauthorized access attempt to ${req.originalUrl}`);
-  res.redirect(REDIRECT_URL_LOGIN);
 };

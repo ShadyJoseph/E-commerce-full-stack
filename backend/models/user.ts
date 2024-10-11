@@ -15,6 +15,7 @@ export interface IUser extends Document {
   }>;
   cart?: Array<{
     productId: mongoose.Schema.Types.ObjectId;
+    size: string;
     quantity: number;
   }>;
   wishlist?: mongoose.Schema.Types.ObjectId[]; // List of product IDs
@@ -50,6 +51,7 @@ const UserSchema: Schema = new Schema(
     cart: [
       {
         productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+        size: { type: String, required: true }, // User must choose a size
         quantity: { type: Number, default: 1, min: 1 }, // Enforce minimum quantity
       },
     ],

@@ -1,17 +1,14 @@
 import passport from 'passport';
-import { Strategy as GoogleStrategy, Profile as GoogleProfile, VerifyCallback } from 'passport-google-oauth20';
-import { Strategy as InstagramStrategy, Profile as InstagramProfile } from 'passport-instagram';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import dotenv from 'dotenv';
 import User, { IUser } from '../models/user';
 
 dotenv.config();
 
-// Serialize user into the session
 passport.serializeUser((user: Express.User, done: (err: any, id?: string) => void) => {
   done(null, (user as any).id);
 });
 
-// Deserialize user from the session
 passport.deserializeUser(async (id: string, done: (err: any, user?: Express.User | null) => void) => {
   try {
     const user = await User.findById(id);
@@ -29,7 +26,7 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       callbackURL: process.env.GOOGLE_CALLBACK_URL!,
     },
-    async (accessToken: string, refreshToken: string, profile: GoogleProfile, done: VerifyCallback) => {
+    async (accessToken, refreshToken, profile, done) => {
       try {
         const existingUser = await User.findOne({ googleId: profile.id });
         if (existingUser) {
@@ -49,6 +46,5 @@ passport.use(
     }
   )
 );
-
 
 export default passport;

@@ -15,3 +15,4 @@ export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   }
   res.status(403).json({ message: 'You do not have permission to access this route' });
 };
+
