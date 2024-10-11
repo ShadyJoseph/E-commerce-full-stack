@@ -4,11 +4,12 @@ import dotenv from 'dotenv';
 import logger from './utils/logger';
 import errorHandler from './middlewares/error';
 import connectDB from './config/db';
-import passport from './middlewares/authMiddlewares';
+import passport from './config/passportSetup'; // Fix the typo here
 import session from 'express-session';
 import authRoutes from './routes/authRoutes';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import MongoStore from 'connect-mongo';
 
 // Load environment variables
 dotenv.config();
@@ -18,18 +19,24 @@ const app = express();
 
 // Middleware for security
 app.use(helmet()); // Protect HTTP headers
-app.use(rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests, please try again later.',
-}));
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests, please try again later.',
+  })
+);
 
-// Session middleware
+// MongoDB connection for sessions
 app.use(
   session({
     secret: process.env.SESSION_SECRET!,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI, // Connect your session store to MongoDB
+      ttl: 14 * 24 * 60 * 60, // 14 days expiration
+    }),
   })
 );
 

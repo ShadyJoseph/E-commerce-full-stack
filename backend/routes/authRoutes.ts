@@ -2,8 +2,6 @@ import { Router } from 'express';
 import {
   googleAuth,
   googleCallback,
-  instagramAuth,
-  instagramCallback,
   logout,
 } from '../controllers/authController';
 import { isAuthenticated, isAdmin } from '../middlewares/authValidation';
@@ -13,10 +11,6 @@ const router = Router();
 // Google Auth Routes
 router.get('/auth/google', googleAuth);
 router.get('/auth/google/callback', googleCallback);
-
-// Instagram Auth Routes
-router.get('/auth/instagram', instagramAuth);
-router.get('/auth/instagram/callback', instagramCallback);
 
 // Logout Route
 router.get('/auth/logout', isAuthenticated, logout);

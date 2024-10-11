@@ -3,7 +3,6 @@ import validator from 'validator'; // Import validator for email validation
 
 export interface IUser extends Document {
   googleId?: string;
-  instagramId?: string;
   displayName: string;
   email?: string;
   role: string; // 'user', 'admin', etc.
@@ -26,7 +25,6 @@ export interface IUser extends Document {
 const UserSchema: Schema = new Schema(
   {
     googleId: { type: String },
-    instagramId: { type: String },
     displayName: { type: String, required: [true, 'Display name is required'] },
     email: {
       type: String,
