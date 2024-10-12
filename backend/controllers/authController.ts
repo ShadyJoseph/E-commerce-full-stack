@@ -1,9 +1,7 @@
-// Import necessary modules
 import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import logger from '../utils/logger';
 
-// Extend Express's Request interface to include logout and isAuthenticated methods
 declare global {
   namespace Express {
     interface Request {
@@ -18,9 +16,17 @@ const REDIRECT_URL_DASHBOARD = '/api/dashboard';
 const REDIRECT_URL_LOGIN = '/api/auth/login';
 
 // Google OAuth Authentication - Starts the Google OAuth process
-export const googleAuth = passport.authenticate('google', {
-  scope: ['profile', 'email'], // Define scope for requesting user data from Google
-});
+export const googleAuth = (req: Request, res: Response, next: NextFunction) => {
+  if (req.isAuthenticated()) {
+    // User is already authenticated, redirect to dashboard
+    return res.redirect(REDIRECT_URL_DASHBOARD);
+  }
+  
+  logger.info('Redirecting to Google for authentication');
+  passport.authenticate('google', {
+    scope: ['profile', 'email'], // Define scope for requesting user data from Google
+  })(req, res, next);
+};
 
 // Google OAuth Callback - Handles the response from Google after authentication
 export const googleCallback = (req: Request, res: Response, next: NextFunction) => {

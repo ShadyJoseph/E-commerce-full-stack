@@ -41,6 +41,7 @@ passport.use(
         await newUser.save();
         done(null, newUser);
       } catch (error) {
+        console.error('Error in Google Strategy:', error);
         done(error);
       }
     }
