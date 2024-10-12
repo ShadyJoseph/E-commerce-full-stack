@@ -1,5 +1,7 @@
+// config/passportSetup.ts
+
 import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy as GoogleStrategy, StrategyOptions } from 'passport-google-oauth20';
 import dotenv from 'dotenv';
 import User, { IUser } from '../models/user';
 import logger from '../utils/logger';
@@ -26,11 +28,18 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       callbackURL: process.env.GOOGLE_CALLBACK_URL!,
-    },
-    async (accessToken, refreshToken, profile, done) => {
+      accessType: 'offline', // To get refresh token
+      prompt: 'consent', // Forces consent screen every time
+    } as StrategyOptions,
+    async (accessToken: string, refreshToken: string, profile: any, done: (error: any, user?: IUser | false) => void) => {
       try {
-        const existingUser = await User.findOne({ googleId: profile.id });
+        const existingUser = await User.findOne({ googleId: profile.id }) as IUser;
         if (existingUser) {
+          // Update refresh token if available
+          if (refreshToken) {
+            existingUser.refreshToken = refreshToken; // Assign refreshToken to existing user
+            await existingUser.save();
+          }
           return done(null, existingUser);
         }
 
@@ -38,6 +47,7 @@ passport.use(
           googleId: profile.id,
           displayName: profile.displayName,
           email: profile.emails ? profile.emails[0].value : undefined,
+          refreshToken, // Save refresh token for new user
         });
         await newUser.save();
         done(null, newUser);

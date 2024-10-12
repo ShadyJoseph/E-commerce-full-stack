@@ -7,7 +7,6 @@ import connectDB from './config/db';
 import passport from './config/passportSetup'; 
 import session from 'express-session';
 import authRoutes from './routes/authRoutes';
-import userRoutes from './routes/userRoutes';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import MongoStore from 'connect-mongo';
@@ -19,59 +18,63 @@ dotenv.config();
 const app = express();
 
 // Middleware for security
-app.use(helmet()); // Protect HTTP headers
+app.use(helmet());
 app.use(
   rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000, 
+    max: 100, 
     message: 'Too many requests, please try again later.',
     skipSuccessfulRequests: true,
   })
 );
 
+// Connect to MongoDB
+connectDB();
+
+// Session management
 app.use(
   session({
     secret: process.env.SESSION_SECRET!,
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI, // Ensure this is correctly set
-      ttl: 2 * 24 * 60 * 60, // 2 days expiration
+      mongoUrl: process.env.MONGO_URI!,
+      ttl: 2 * 24 * 60 * 60, 
     }),
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // This should be true only in production
-      sameSite: 'strict', // Keep the same
+      secure: process.env.NODE_ENV === 'production', 
+      sameSite: 'strict', 
+      maxAge: 24 * 60 * 60 * 1000, 
     },
+    proxy: process.env.NODE_ENV === 'production',
   })
 );
-
 
 // Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Middleware
-app.use(express.json());
-app.use(cors());
-
-// Test route
-app.get('/', (req: Request, res: Response) => {
-  res.send('API is running...');
-});
+// CORS Setup
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' ? 'https://yourproductiondomain.com' : '*',
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
 // Routes
-app.use('/api', authRoutes); 
-app.use('/api/user', userRoutes);
+app.use('/api', authRoutes);
 
-// Error handling middleware
+// Default Route
+app.get('/', (req: Request, res: Response) => {
+  res.send('Hello, welcome to the app!');
+});
+
+// Error Handling Middleware
 app.use(errorHandler);
 
-// MongoDB connection
-connectDB();
-
-// Start the server
+// Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  logger.info(`Server is running on PORT:${PORT}`);
+  logger.info(`Server running on port ${PORT}`);
 });

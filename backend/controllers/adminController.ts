@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 
-// Manage users
 export const manageUsers = (req: Request, res: Response) => {
   // Logic to manage users
   res.send('Manage users');

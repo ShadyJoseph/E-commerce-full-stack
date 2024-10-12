@@ -1,3 +1,5 @@
+// models/user.ts
+
 import mongoose, { Schema, Document } from 'mongoose';
 import validator from 'validator'; // Import validator for email validation
 
@@ -19,6 +21,7 @@ export interface IUser extends Document {
     quantity: number;
   }>;
   wishlist?: mongoose.Schema.Types.ObjectId[]; // List of product IDs
+  refreshToken?: string; // Add refreshToken to IUser interface
   createdAt: Date;
   updatedAt: Date;
 }
@@ -56,6 +59,7 @@ const UserSchema: Schema = new Schema(
       },
     ],
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+    refreshToken: { type: String }, // Add refreshToken field to schema
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt fields
