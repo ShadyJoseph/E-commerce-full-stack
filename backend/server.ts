@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import logger from './utils/logger';
 import errorHandler from './middlewares/error';
 import connectDB from './config/db';
-import passport from './config/passportSetup'; // Fix the typo here
+import passport from './config/passportSetup'; 
 import session from 'express-session';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes'
@@ -36,7 +36,7 @@ app.use(
     saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI, // Connect your session store to MongoDB
-      ttl: 14 * 24 * 60 * 60, // 14 days expiration
+      ttl: 2 * 24 * 60 * 60, // 2 days expiration
     }),
   })
 );
