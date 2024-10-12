@@ -1,5 +1,4 @@
 // controllers/authController.ts
-
 import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import logger from '../utils/logger';
@@ -26,9 +25,7 @@ export const googleAuth = (req: Request, res: Response, next: NextFunction) => {
 
   logger.info('Redirecting to Google for authentication');
   passport.authenticate('google', {
-    scope: ['profile', 'email'],
-    accessType: 'offline',
-    prompt: 'consent',
+    scope: ['profile', 'email'], // This should be here
   })(req, res, next);
 };
 
