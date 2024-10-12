@@ -24,7 +24,7 @@ export const googleAuth = passport.authenticate('google', {
 
 // Google OAuth Callback - Handles the response from Google after authentication
 export const googleCallback = (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('google', { failureRedirect: REDIRECT_URL_LOGIN, session: true })(req, res, (err: Error | null) => { 
+  passport.authenticate('google', { failureRedirect: REDIRECT_URL_LOGIN, session: true })(req, res, (err: Error | null) => {
     if (err) {
       logger.error(`Google login error: ${err.message}`, { stack: err.stack });
       return next(err);
@@ -64,4 +64,3 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
     });
   });
 };
-

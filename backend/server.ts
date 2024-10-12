@@ -7,7 +7,7 @@ import connectDB from './config/db';
 import passport from './config/passportSetup'; 
 import session from 'express-session';
 import authRoutes from './routes/authRoutes';
-import userRoutes from './routes/userRoutes'
+import userRoutes from './routes/userRoutes';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import MongoStore from 'connect-mongo';
@@ -25,6 +25,7 @@ app.use(
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Limit each IP to 100 requests per windowMs
     message: 'Too many requests, please try again later.',
+    skipSuccessfulRequests: true,
   })
 );
 
@@ -38,6 +39,11 @@ app.use(
       mongoUrl: process.env.MONGO_URI, // Connect your session store to MongoDB
       ttl: 2 * 24 * 60 * 60, // 2 days expiration
     }),
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Ensure cookies are only sent over HTTPS
+      sameSite: 'strict',
+    },
   })
 );
 
@@ -56,7 +62,7 @@ app.get('/', (req: Request, res: Response) => {
 
 // Routes
 app.use('/api', authRoutes); 
-app.use('/api/user', userRoutes); 
+app.use('/api/user', userRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
