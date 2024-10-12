@@ -18,13 +18,14 @@ const REDIRECT_URL_LOGIN = '/api/auth/login';
 // Google OAuth Authentication - Starts the Google OAuth process
 export const googleAuth = (req: Request, res: Response, next: NextFunction) => {
   if (req.isAuthenticated()) {
-    // User is already authenticated, redirect to dashboard
     return res.redirect(REDIRECT_URL_DASHBOARD);
   }
-  
+
   logger.info('Redirecting to Google for authentication');
   passport.authenticate('google', {
-    scope: ['profile', 'email'], // Define scope for requesting user data from Google
+    scope: ['profile', 'email'], // Ensure the correct scopes are defined
+    accessType: 'offline', // Optional: This allows you to receive a refresh token
+    prompt: 'consent', // Optional: Forces the consent screen to be shown
   })(req, res, next);
 };
 
@@ -36,13 +37,11 @@ export const googleCallback = (req: Request, res: Response, next: NextFunction) 
       return next(err);
     }
 
-    // Ensure that a user is authenticated, otherwise redirect to login
     if (!req.user) {
       logger.error('Google callback: user not authenticated');
       return res.redirect(REDIRECT_URL_LOGIN);
     }
 
-    // Successful login: log user and redirect to dashboard
     logger.info(`User ${req.user?.email || req.user?.displayName} logged in via Google`);
     res.redirect(REDIRECT_URL_DASHBOARD);
   });
@@ -56,16 +55,14 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
       return next(err);
     }
 
-    // Destroy the session after logout
     req.session.destroy((destroyErr) => {
       if (destroyErr) {
         logger.error(`Session destroy error: ${destroyErr.message}`, { stack: destroyErr.stack });
         return next(destroyErr);
       }
 
-      // Log the logout action and redirect to home
       logger.info(`User ${req.user?.email || req.user?.displayName} logged out`);
-      res.clearCookie('connect.sid'); // Clear the session cookie (replace 'connect.sid' with the actual session cookie name if different)
+      res.clearCookie('connect.sid'); // Clear session cookie
       res.redirect(REDIRECT_URL_HOME);
     });
   });

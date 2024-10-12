@@ -29,23 +29,23 @@ app.use(
   })
 );
 
-// MongoDB connection for sessions
 app.use(
   session({
     secret: process.env.SESSION_SECRET!,
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI, // Connect your session store to MongoDB
+      mongoUrl: process.env.MONGO_URI, // Ensure this is correctly set
       ttl: 2 * 24 * 60 * 60, // 2 days expiration
     }),
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Ensure cookies are only sent over HTTPS
-      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production', // This should be true only in production
+      sameSite: 'strict', // Keep the same
     },
   })
 );
+
 
 // Initialize Passport
 app.use(passport.initialize());
