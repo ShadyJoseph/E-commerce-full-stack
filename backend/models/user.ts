@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, CallbackError } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import validator from 'validator';
 import { IProduct } from './product'; // Import IProduct here
@@ -7,6 +7,13 @@ import { IProduct } from './product'; // Import IProduct here
 export enum UserRole {
   User = 'user',
   Admin = 'admin',
+}
+
+// Define the CartItem interface for cart items
+interface CartItem {
+  product: mongoose.Types.ObjectId;
+  size: string;
+  quantity: number;
 }
 
 // Define the IUser interface extending mongoose's Document
@@ -24,11 +31,7 @@ export interface IUser extends Document {
     postalCode: string;
     country: string;
   }>;
-  cart?: Array<{
-    product: IProduct;
-    size: string;
-    quantity: number;
-  }>;
+  cart?: CartItem[];  // Use CartItem interface
   wishlist?: mongoose.Schema.Types.ObjectId[];
   refreshToken?: string;
   createdAt: Date;
@@ -83,7 +86,7 @@ const UserSchema: Schema<IUser> = new Schema(
       {
         product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
         size: { type: String, required: true },
-        quantity: { type: Number, default: 1, min: 1 },
+        quantity: { type: Number, required: true, min: 1 },
       },
     ],
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
@@ -92,57 +95,46 @@ const UserSchema: Schema<IUser> = new Schema(
   { timestamps: true }
 );
 
-// Middleware to hash password before saving
-UserSchema.pre<IUser>('save', async function (next: (err?: CallbackError) => void) {
-  if (!this.isModified('password') || !this.password) return next(); // Only hash if modified
-
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt); // Hash password
-    next();
-  } catch (error) {
-    next(error as CallbackError);
-  }
-});
-
-// Password comparison method
+// Method to compare password with hashed password
 UserSchema.methods.comparePassword = async function (password: string): Promise<boolean> {
-  return bcrypt.compare(password, this.password!);
+  try {
+    return await bcrypt.compare(password, this.password || '');
+  } catch (error) {
+    throw new Error('Error comparing passwords');
+  }
 };
 
 // Method to add an address
-UserSchema.methods.addAddress = async function (address: { street: string; city: string; state: string; postalCode: string; country: string }) {
-  this.addresses = this.addresses || [];
-  this.addresses.push(address);
+UserSchema.methods.addAddress = async function (address: { street: string; city: string; state: string; postalCode: string; country: string }): Promise<void> {
+  this.addresses?.push(address);
   await this.save();
 };
 
-// Method to add a product to the cart
-UserSchema.methods.addToCart = async function (productId: string, size: string, quantity: number) {
-  this.cart = this.cart || [];
-
-  const existingItemIndex = this.cart.findIndex((item: { product: mongoose.Types.ObjectId; size: string }) => 
+// Method to add an item to the cart
+UserSchema.methods.addToCart = async function (productId: string, size: string, quantity: number): Promise<void> {
+  const itemIndex = this.cart?.findIndex((item: CartItem) => 
     item.product.toString() === productId && item.size === size
-  );
-
-  if (existingItemIndex > -1) {
-    this.cart[existingItemIndex].quantity += quantity; // Increment quantity
+  ) ?? -1; // Use CartItem type for item
+  
+  if (itemIndex > -1) {
+    // Update quantity if the item is already in the cart
+    this.cart![itemIndex].quantity += quantity;
   } else {
-    this.cart.push({ product: new mongoose.Types.ObjectId(productId), size, quantity });
+    // Add new item to the cart
+    this.cart?.push({ product: productId, size, quantity });
   }
-
-  await this.save();
-};
-
-// Method to remove a product from the cart
-UserSchema.methods.removeFromCart = async function (productId: string, size: string) {
-  this.cart = this.cart?.filter((item: { product: mongoose.Types.ObjectId; size: string }) => 
-    !(item.product.toString() === productId && item.size === size)
-  );
   
   await this.save();
 };
 
-// Create and export the User model
+// Method to remove an item from the cart
+UserSchema.methods.removeFromCart = async function (productId: string, size: string): Promise<void> {
+  this.cart = this.cart?.filter((item: CartItem) => 
+    !(item.product.toString() === productId && item.size === size)
+  ) ?? []; // Use CartItem type for item
+  await this.save();
+};
+
+// Export the User model
 const User = mongoose.model<IUser>('User', UserSchema);
 export default User;

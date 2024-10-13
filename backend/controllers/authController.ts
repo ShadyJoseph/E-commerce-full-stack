@@ -49,9 +49,11 @@ export const googleCallback = (req: Request, res: Response, next: NextFunction) 
 // User Sign-up (JWT)
 export const userSignUp = async (req: Request, res: Response) => {
   const { email, password, displayName, addresses } = req.body;
+  logger.info(`Sign-up attempt for email: ${email}`);
 
   try {
     const existingUser = await User.findOne({ email }) as IUser | null;
+
     if (existingUser) {
       logger.warn(`Sign-up attempt: User ${email} already exists`);
       return res.status(400).json({ message: 'User already exists' });
@@ -69,53 +71,84 @@ export const userSignUp = async (req: Request, res: Response) => {
     logger.info(`User ${email} signed up successfully`);
 
     const token = generateToken(newUser._id.toString(), newUser.role);
+    logger.info(`Token generated for new user ${email}`);
 
     res
       .status(201)
       .json({ message: 'Sign up successful', token, user: { email: newUser.email, displayName: newUser.displayName } });
   } catch (error) {
-    handleServerError(res, error as Error, 'Sign-up error');
+    if (error instanceof Error) {
+      logger.error(`Sign-up error for email ${email}: ${error.message}`, { stack: error.stack });
+      handleServerError(res, error, 'Sign-up error');
+    } else {
+      logger.error(`Sign-up error for email ${email}: Unexpected error`, { error });
+      handleServerError(res, new Error('Unexpected error'), 'Sign-up error');
+    }
   }
 };
 
-// User Login (JWT)
+// User Login
 export const userLogin = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
+  logger.info(`Login attempt for email: ${email}`);
+
   try {
     const user = await User.findOne({ email }) as IUser | null;
-    if (!user || !(await user.comparePassword(password))) {
+
+    if (!user) {
+      logger.warn(`Login attempt: User not found for ${email}`);
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    logger.info(`User found: ${user.email}. Proceeding to password comparison.`);
+    const passwordMatch = await user.comparePassword(password);
+
+    if (!passwordMatch) {
       logger.warn(`Login attempt: Invalid credentials for ${email}`);
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    logger.info(`Password match for user: ${email}. Generating JWT token.`);
     const token = generateToken(user._id.toString(), user.role);
-    logger.info(`User ${email} logged in successfully`);
+
+    logger.info(`User ${email} logged in successfully, token generated.`);
 
     res
       .status(200)
       .cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
       .json({ message: 'Login successful', token, user: { email: user.email, displayName: user.displayName, role: user.role } });
   } catch (error) {
-    handleServerError(res, error as Error, 'Login error');
+    if (error instanceof Error) {
+      logger.error(`Login error for email ${email}: ${error.message}`, { stack: error.stack });
+      handleServerError(res, error, 'Login error');
+    } else {
+      logger.error(`Login error for email ${email}: Unexpected error`, { error });
+      handleServerError(res, new Error('Unexpected error'), 'Login error');
+    }
   }
 };
 
 // Logout Handler
 export const logout = (req: Request, res: Response, next: NextFunction) => {
+  logger.info(`Logout attempt for user: ${req.user?.email || 'unknown'}`);
+
+  // Ensure req.logout is called correctly
   req.logout((err: Error | null) => {
     if (err) {
+      logger.error(`Logout error: ${err.message}`, { stack: err.stack });
       return handleServerError(res, err, 'Logout error');
     }
 
     req.session.destroy((destroyErr) => {
       if (destroyErr) {
+        logger.error(`Session destroy error: ${destroyErr.message}`, { stack: destroyErr.stack });
         return handleServerError(res, destroyErr, 'Session destroy error');
       }
 
       logger.info(`User ${req.user?.email || req.user?.displayName} logged out`);
       res.clearCookie('connect.sid'); // Clear session cookie
-      res.redirect('/');
+      return res.status(200).json({ message: 'Logged out successfully' }); // Change to JSON response
     });
   });
 };

@@ -25,8 +25,9 @@ router.get('/auth/google/callback', googleCallback);
 router.post('/auth/signup', validateUserSignUp, validateRequest, userSignUp);
 router.post('/auth/login', validateUserLogin, validateRequest, userLogin);
 
-// Logout Route
-router.get('/auth/logout', isAuthenticated, logout);
+// Logout Route - consider using POST instead of GET for better security
+router.post('/auth/logout', isAuthenticated, logout);
+
 
 // Protected Dashboard Route
 router.get('/dashboard', isAuthenticated, (req, res) => {
