@@ -11,12 +11,12 @@ export enum UserRole {
 
 // Define the IUser interface extending mongoose's Document
 export interface IUser extends Document {
-  _id: mongoose.Types.ObjectId; // Explicitly define _id as ObjectId
+  _id: mongoose.Types.ObjectId;
   googleId?: string;
   displayName: string;
   email: string;
   password?: string;
-  role: UserRole; // Use the enum for role
+  role: UserRole;
   addresses?: Array<{
     street: string;
     city: string;
@@ -25,7 +25,7 @@ export interface IUser extends Document {
     country: string;
   }>;
   cart?: Array<{
-    product: IProduct; // Reference the IProduct type directly
+    product: IProduct;
     size: string;
     quantity: number;
   }>;
@@ -35,8 +35,8 @@ export interface IUser extends Document {
   updatedAt: Date;
   comparePassword(password: string): Promise<boolean>;
   addAddress(address: { street: string; city: string; state: string; postalCode: string; country: string }): Promise<void>;
-  addToCart(productId: string, size: string, quantity: number): Promise<void>; // Method to add to cart
-  removeFromCart(productId: string, size: string): Promise<void>; // Method to remove from cart
+  addToCart(productId: string, size: string, quantity: number): Promise<void>;
+  removeFromCart(productId: string, size: string): Promise<void>;
 }
 
 // Define the User schema
@@ -66,7 +66,7 @@ const UserSchema: Schema<IUser> = new Schema(
         message: 'Password should have at least 8 characters',
       },
     },
-    role: { type: String, enum: Object.values(UserRole), default: UserRole.User }, // Use enum for role
+    role: { type: String, enum: Object.values(UserRole), default: UserRole.User },
     addresses: {
       type: [
         {
@@ -77,11 +77,11 @@ const UserSchema: Schema<IUser> = new Schema(
           country: { type: String },
         },
       ],
-      default: [], 
+      default: [],
     },
     cart: [
       {
-        product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true }, // Use IProduct for the product field
+        product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
         size: { type: String, required: true },
         quantity: { type: Number, default: 1, min: 1 },
       },
@@ -101,7 +101,7 @@ UserSchema.pre<IUser>('save', async function (next: (err?: CallbackError) => voi
     this.password = await bcrypt.hash(this.password, salt); // Hash password
     next();
   } catch (error) {
-    next(error as CallbackError); // Cast error to CallbackError
+    next(error as CallbackError);
   }
 });
 

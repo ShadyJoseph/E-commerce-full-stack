@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import User, { IUser } from '../models/user'; // Import User and IUser
+import User, { IUser } from '../models/user';
 import logger from '../utils/logger';
 
 // Utility for error handling
@@ -51,8 +51,9 @@ export const userSignUp = async (req: Request, res: Response) => {
   const { email, password, displayName, addresses } = req.body;
 
   try {
-    const existingUser = await User.findOne({ email }) as IUser | null; // Explicitly cast to IUser
+    const existingUser = await User.findOne({ email }) as IUser | null;
     if (existingUser) {
+      logger.warn(`Sign-up attempt: User ${email} already exists`);
       return res.status(400).json({ message: 'User already exists' });
     }
 
@@ -62,12 +63,12 @@ export const userSignUp = async (req: Request, res: Response) => {
       password: hashedPassword,
       displayName,
       addresses: addresses || []
-    }) as IUser; // Assert the type to IUser
+    }) as IUser;
 
     await newUser.save();
     logger.info(`User ${email} signed up successfully`);
 
-    const token = generateToken(newUser._id.toString(), newUser.role); // Use newUser._id here
+    const token = generateToken(newUser._id.toString(), newUser.role);
 
     res
       .status(201)
@@ -82,12 +83,13 @@ export const userLogin = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email }) as IUser | null; // Cast here as IUser | null
+    const user = await User.findOne({ email }) as IUser | null;
     if (!user || !(await user.comparePassword(password))) {
+      logger.warn(`Login attempt: Invalid credentials for ${email}`);
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const token = generateToken(user._id.toString(), user.role); // Use user._id here
+    const token = generateToken(user._id.toString(), user.role);
     logger.info(`User ${email} logged in successfully`);
 
     res
