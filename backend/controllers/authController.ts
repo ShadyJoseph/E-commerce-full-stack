@@ -2,13 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import User, { IUser } from '../models/user'; // Import IUser here
+import User, { IUser } from '../models/user'; // Import User and IUser
 import logger from '../utils/logger';
-
-// Define redirect URLs
-const REDIRECT_URL_HOME = '/';
-const REDIRECT_URL_DASHBOARD = '/api/dashboard';
-const REDIRECT_URL_LOGIN = '/api/auth/login';
 
 // Utility for error handling
 const handleServerError = (res: Response, error: Error, message: string) => {
@@ -25,7 +20,7 @@ const generateToken = (userId: string, role: string) => {
 export const googleAuth = (req: Request, res: Response, next: NextFunction) => {
   if (req.isAuthenticated()) {
     logger.info(`User already authenticated, redirecting to dashboard.`);
-    return res.redirect(REDIRECT_URL_DASHBOARD);
+    return res.redirect('/api/dashboard');
   }
 
   logger.info('Redirecting to Google for authentication');
@@ -36,23 +31,24 @@ export const googleAuth = (req: Request, res: Response, next: NextFunction) => {
 
 // Google OAuth Callback
 export const googleCallback = (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('google', { failureRedirect: REDIRECT_URL_LOGIN, session: true })(req, res, (err: Error | null) => {
+  passport.authenticate('google', { failureRedirect: '/api/auth/login', session: true })(req, res, (err: Error | null) => {
     if (err) {
       return handleServerError(res, err, 'Google login error');
     }
 
     if (!req.user) {
       logger.error('Google callback: user not authenticated');
-      return res.redirect(REDIRECT_URL_LOGIN);
+      return res.redirect('/api/auth/login');
     }
 
     logger.info(`User ${req.user?.email || req.user?.displayName} logged in via Google`);
-    res.redirect(REDIRECT_URL_DASHBOARD);
+    res.redirect('/api/dashboard');
   });
 };
 
+// User Sign-up (JWT)
 export const userSignUp = async (req: Request, res: Response) => {
-  const { email, password, displayName } = req.body;
+  const { email, password, displayName, addresses } = req.body;
 
   try {
     const existingUser = await User.findOne({ email }) as IUser | null; // Explicitly cast to IUser
@@ -60,10 +56,12 @@ export const userSignUp = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = new User({
       email,
-      password,
+      password: hashedPassword,
       displayName,
+      addresses: addresses || []
     }) as IUser; // Assert the type to IUser
 
     await newUser.save();
@@ -79,7 +77,7 @@ export const userSignUp = async (req: Request, res: Response) => {
   }
 };
 
-// Inside userLogin
+// User Login (JWT)
 export const userLogin = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
@@ -115,7 +113,7 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
 
       logger.info(`User ${req.user?.email || req.user?.displayName} logged out`);
       res.clearCookie('connect.sid'); // Clear session cookie
-      res.redirect(REDIRECT_URL_HOME);
+      res.redirect('/');
     });
   });
 };

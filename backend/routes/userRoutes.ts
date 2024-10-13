@@ -5,18 +5,22 @@ import {
   viewCart,
   addToCart,
   removeFromCart,
+  addAddress,
 } from '../controllers/userController';
-import { isAuthenticated } from '../middlewares/authValidation';
+import { isJWTAuthenticated } from '../middlewares/authValidation';
 
 const router = Router();
 
-// User Profile
-router.get('/profile', isAuthenticated, getProfile);
-router.put('/profile', isAuthenticated, updateProfile);
+// User Profile Routes
+router.get('/profile', isJWTAuthenticated, getProfile);
+router.put('/profile', isJWTAuthenticated, updateProfile);
 
-// User Cart
-router.get('/cart', isAuthenticated, viewCart);
-router.post('/cart/add', isAuthenticated, addToCart);
-router.delete('/cart/remove/:productId', isAuthenticated, removeFromCart); // New route for removing item from cart
+// Cart Management
+router.get('/cart', isJWTAuthenticated, viewCart);
+router.post('/cart', isJWTAuthenticated, addToCart);
+router.delete('/cart/:productId/:size', isJWTAuthenticated, removeFromCart);
+
+// Address Management
+router.post('/address', isJWTAuthenticated, addAddress);
 
 export default router;

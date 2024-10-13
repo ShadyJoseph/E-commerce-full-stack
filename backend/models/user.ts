@@ -35,6 +35,8 @@ export interface IUser extends Document {
   updatedAt: Date;
   comparePassword(password: string): Promise<boolean>;
   addAddress(address: { street: string; city: string; state: string; postalCode: string; country: string }): Promise<void>;
+  addToCart(productId: string, size: string, quantity: number): Promise<void>; // Method to add to cart
+  removeFromCart(productId: string, size: string): Promise<void>; // Method to remove from cart
 }
 
 // Define the User schema
@@ -109,6 +111,32 @@ UserSchema.methods.comparePassword = async function (password: string): Promise<
 UserSchema.methods.addAddress = async function (address: { street: string; city: string; state: string; postalCode: string; country: string }) {
   this.addresses = this.addresses || [];
   this.addresses.push(address);
+  await this.save();
+};
+
+// Method to add a product to the cart
+UserSchema.methods.addToCart = async function (productId: string, size: string, quantity: number) {
+  this.cart = this.cart || [];
+
+  const existingItemIndex = this.cart.findIndex((item: { product: mongoose.Types.ObjectId; size: string }) => 
+    item.product.toString() === productId && item.size === size
+  );
+
+  if (existingItemIndex > -1) {
+    this.cart[existingItemIndex].quantity += quantity; // Increment quantity
+  } else {
+    this.cart.push({ product: new mongoose.Types.ObjectId(productId), size, quantity });
+  }
+
+  await this.save();
+};
+
+// Method to remove a product from the cart
+UserSchema.methods.removeFromCart = async function (productId: string, size: string) {
+  this.cart = this.cart?.filter((item: { product: mongoose.Types.ObjectId; size: string }) => 
+    !(item.product.toString() === productId && item.size === size)
+  );
+  
   await this.save();
 };
 
