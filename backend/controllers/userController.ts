@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import User from '../models/user'; // Import User model
+import Product, { IProduct } from '../models/product'; // Import Product model
 
 // Get user profile
 export const getProfile = (req: Request, res: Response) => {
@@ -27,7 +28,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 // View user cart
 export const viewCart = async (req: Request, res: Response) => {
   try {
-    const user = await User.findById(req.user?._id).populate('cart.productId');
+    const user = await User.findById(req.user?._id).populate('cart.product.productId'); // Correct the populate reference
 
     if (!user || !user.cart) {
       return res.status(404).json({ message: 'User or cart not found' });
@@ -42,7 +43,7 @@ export const viewCart = async (req: Request, res: Response) => {
 // Add item to cart
 export const addToCart = async (req: Request, res: Response) => {
   try {
-    const { productId, size, quantity } = req.body; // Ensure size is included
+    const { product, size, quantity } = req.body; // Change productId to product
     const user = await User.findById(req.user?._id);
 
     if (!user) {
@@ -50,18 +51,16 @@ export const addToCart = async (req: Request, res: Response) => {
     }
 
     // Initialize cart if undefined
-    if (!user.cart) {
-      user.cart = [];
-    }
+    user.cart = user.cart || [];
 
     const existingItemIndex = user.cart.findIndex(
-      (item) => item.productId.toString() === productId && item.size === size
+      (item) => item.product.toString() === product && item.size === size // Use product instead of productId
     );
 
     if (existingItemIndex !== -1) {
       user.cart[existingItemIndex].quantity += quantity;
     } else {
-      user.cart.push({ productId, size, quantity });
+      user.cart.push({ product, size, quantity }); // Use product instead of productId
     }
 
     await user.save();
@@ -75,7 +74,7 @@ export const addToCart = async (req: Request, res: Response) => {
 // Remove item from cart
 export const removeFromCart = async (req: Request, res: Response) => {
   try {
-    const { productId, size } = req.params;
+    const { product, size } = req.params; // Change productId to product
     const user = await User.findById(req.user?._id);
 
     if (!user || !user.cart) {
@@ -83,12 +82,32 @@ export const removeFromCart = async (req: Request, res: Response) => {
     }
 
     user.cart = user.cart.filter(
-      (item) => item.productId.toString() !== productId || item.size !== size
+      (item) => item.product.toString() !== product || item.size !== size // Use product instead of productId
     );
 
     await user.save();
 
     res.json({ message: 'Item removed from cart', cart: user.cart });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+// Example of another function for adding an address
+export const addAddress = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?._id; // Get the user's ID from the request
+    const address = req.body; // Assuming the address is sent in the body
+
+    const user = await User.findById(userId); // Find the user by ID
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    await user.addAddress(address); // Call the addAddress method
+
+    res.json({ message: 'Address added', addresses: user.addresses });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }

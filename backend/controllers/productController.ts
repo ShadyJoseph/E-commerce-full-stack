@@ -1,44 +1,61 @@
 import { Request, Response } from 'express';
-import Product from '../models/product'; // Adjust the import path based on your project structure
+import Product from '../models/product';
 
-// Get Product by ID
-export const getProductById = async (req: Request, res: Response) => {
-  const { id } = req.params;
-
+// Create a new product
+export const createProduct = async (req: Request, res: Response) => {
   try {
-    const product = await Product.findById(id);
-
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-
-    res.status(200).json(product);
+    const newProduct = await Product.create(req.body);
+    res.status(201).json({ message: 'Product created', product: newProduct });
   } catch (error) {
-    console.error(`Error fetching product by ID: ${error}`);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error });
   }
 };
 
-// Search Products
-export const searchProducts = async (req: Request, res: Response) => {
-  const { query } = req.query; // Assuming query is passed as a URL parameter
-
+// Get all products
+export const getAllProducts = async (req: Request, res: Response) => {
   try {
-    // Adjust the search logic according to your requirements
-    const products = await Product.find({
-      $or: [
-        { name: { $regex: query, $options: 'i' } }, // Search by product name (case insensitive)
-        { description: { $regex: query, $options: 'i' } }, // Search by product description
-      ],
-    });
-
-    if (products.length === 0) {
-      return res.status(404).json({ message: 'No products found' });
-    }
-
-    res.status(200).json(products);
+    const products = await Product.find();
+    res.json(products);
   } catch (error) {
-    console.error(`Error searching products: ${error}`);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+// Get a single product
+export const getProductById = async (req: Request, res: Response) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+// Update a product
+export const updateProduct = async (req: Request, res: Response) => {
+  try {
+    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!updatedProduct) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.json({ message: 'Product updated', product: updatedProduct });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+// Delete a product
+export const deleteProduct = async (req: Request, res: Response) => {
+  try {
+    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+    if (!deletedProduct) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.json({ message: 'Product deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
   }
 };
