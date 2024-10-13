@@ -67,15 +67,18 @@ const UserSchema: Schema<IUser> = new Schema(
       },
     },
     role: { type: String, enum: Object.values(UserRole), default: UserRole.User }, // Use enum for role
-    addresses: [
-      {
-        street: { type: String },
-        city: { type: String },
-        state: { type: String },
-        postalCode: { type: String },
-        country: { type: String },
-      },
-    ],
+    addresses: {
+      type: [
+        {
+          street: { type: String },
+          city: { type: String },
+          state: { type: String },
+          postalCode: { type: String },
+          country: { type: String },
+        },
+      ],
+      default: [], 
+    },
     cart: [
       {
         product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true }, // Use IProduct for the product field

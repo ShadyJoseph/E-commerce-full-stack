@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import logger from '../utils/logger';
 import jwt from 'jsonwebtoken';
 import User, { IUser } from '../models/user';
-
+import { body, validationResult } from 'express-validator';
 // Middleware to check if user is authenticated (with session-based or Google OAuth)
 export const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
   if (req.isAuthenticated() && req.user) {
@@ -67,4 +67,40 @@ export const requireAuthentication = (req: Request, res: Response, next: NextFun
     return isAuthenticated(req, res, next);
   }
   return isJWTAuthenticated(req, res, next);
+};
+
+
+
+export const validateUserSignUp = [
+  body('displayName')
+    .exists().withMessage('Display name is required')
+    .isString().withMessage('Display name must be a string')
+    .isLength({ max: 100 }).withMessage('Display name cannot exceed 100 characters'),
+
+  body('email')
+    .exists().withMessage('Email is required')
+    .isEmail().withMessage('Email must be valid'),
+
+  body('password')
+    .exists().withMessage('Password is required')
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
+];
+
+// Validation for user login
+export const validateUserLogin = [
+  body('email')
+    .exists().withMessage('Email is required')
+    .isEmail().withMessage('Email must be valid'),
+
+  body('password')
+    .exists().withMessage('Password is required'),
+];
+
+// Middleware to handle validation errors
+export const validateRequest = (req: Request, res: Response, next: NextFunction) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  next();
 };

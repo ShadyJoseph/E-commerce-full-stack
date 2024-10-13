@@ -88,6 +88,9 @@ export const addAddress = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    if (!user.addresses) {
+      user.addresses = []; // Ensure addresses is an array
+    }
 
     user.addresses.push(address);
     await user.save();

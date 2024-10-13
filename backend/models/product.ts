@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 // Define an enum for product categories
-enum ProductCategory {
+export enum ProductCategory {
   Swimwear = 'swimwear',
   Accessories = 'accessories',
   Others = 'others',

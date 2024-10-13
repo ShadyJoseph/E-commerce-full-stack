@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import Product from '../models/product';
-import expressValidator from 'express-validator'; // Corrected import for express-validator
-const { validationResult } = expressValidator; // Extract validationResult
+import { validationResult } from 'express-validator'; // Correctly import validationResult
 import logger from '../utils/logger'; // Assuming logger utility is used
 
 // Create a new product (Admin only)
@@ -20,8 +19,6 @@ export const createProduct = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Server error', error });
   }
 };
-
-// Other methods remain the same...
 
 
 // Get all products with pagination

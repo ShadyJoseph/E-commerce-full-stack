@@ -7,10 +7,13 @@ import {
   userSignUp,
 } from '../controllers/authController';
 import {
-  isAuthenticated,
-  isJWTAuthenticated,
-  isAdmin,
+  isAuthenticated
 } from '../middlewares/authValidation';
+import {
+  validateUserSignUp,
+  validateUserLogin,
+  validateRequest,
+} from '../middlewares/authValidation'; // Adjust the path as necessary
 
 const router = Router();
 
@@ -19,8 +22,8 @@ router.get('/auth/google', googleAuth);
 router.get('/auth/google/callback', googleCallback);
 
 // User-based Sign-up and Login Routes
-router.post('/auth/signup', userSignUp);
-router.post('/auth/login', userLogin);
+router.post('/auth/signup', validateUserSignUp, validateRequest, userSignUp);
+router.post('/auth/login', validateUserLogin, validateRequest, userLogin);
 
 // Logout Route
 router.get('/auth/logout', isAuthenticated, logout);
