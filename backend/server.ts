@@ -7,8 +7,8 @@ import connectDB from './config/db';
 import passport from './config/passportSetup';
 import session from 'express-session';
 import authRoutes from './routes/authRoutes';
-import userRoutes from './routes/userRoutes'; // Import user routes
-import productRoutes from './routes/productRoutes'; // Import product routes
+import userRoutes from './routes/userRoutes'; 
+import productRoutes from './routes/productRoutes';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import MongoStore from 'connect-mongo';

@@ -4,7 +4,9 @@ import mongoose, { Document, Schema } from 'mongoose';
 export enum ProductCategory {
   Swimwear = 'swimwear',
   Accessories = 'accessories',
-  Others = 'others',
+  Men = 'men',
+  Women = 'women',
+  Kids = 'kids',
 }
 
 // Define an interface for the Product document
@@ -27,7 +29,7 @@ const productSchema: Schema<IProduct> = new mongoose.Schema(
     name: { type: String, required: true, trim: true, maxlength: 100 }, // Max length for name
     description: { type: String, required: true, trim: true, maxlength: 500 }, // Max length for description
     price: { type: Number, required: true, min: 0 }, // Ensure price is non-negative
-    imageUrls: [{ type: String, required: true }], // Make imageUrls an array
+    imageUrls: { type: [String], required: true }, // Support multiple images
     category: { type: String, enum: Object.values(ProductCategory), required: true, trim: true }, // Enum for category
     availableSizes: [
       {
@@ -43,11 +45,11 @@ const productSchema: Schema<IProduct> = new mongoose.Schema(
 
 // Virtual property to calculate total stock
 productSchema.virtual('totalStock').get(function (this: IProduct) {
-  return this.availableSizes.reduce((total: number, s: { stock: number }) => total + s.stock, 0); // Define size type
+  return this.availableSizes.reduce((total, size) => total + size.stock, 0);
 });
 
 // Method to reduce stock
-productSchema.methods.reduceStock = async function (size: string, quantity: number) {
+productSchema.methods.reduceStock = async function (size: string, quantity: number): Promise<void> {
   const sizeIndex = this.availableSizes.findIndex((s:any) => s.size === size);
   if (sizeIndex === -1) {
     throw new Error('Invalid size');

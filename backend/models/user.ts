@@ -31,7 +31,7 @@ export interface IUser extends Document {
     postalCode: string;
     country: string;
   }>;
-  cart?: CartItem[];  // Use CartItem interface
+  cart?: CartItem[]; // Use CartItem interface
   wishlist?: mongoose.Schema.Types.ObjectId[];
   refreshToken?: string;
   createdAt: Date;
