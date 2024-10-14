@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User, { IUser } from '../models/user';
 import logger from '../utils/logger';
+import { blacklistToken } from '../utils/blacklistToken'
 
 // Utility for error handling
 const handleServerError = (res: Response, error: Error, message: string) => {
@@ -19,7 +20,7 @@ const generateToken = (userId: string, role: string) => {
 // Google OAuth Authentication
 export const googleAuth = (req: Request, res: Response, next: NextFunction) => {
   if (req.isAuthenticated()) {
-    logger.info(`User already authenticated, redirecting to dashboard.`);
+    logger.info(`User already authenticated (session-based), redirecting to dashboard.`);
     return res.redirect('/api/dashboard');
   }
 
@@ -30,8 +31,8 @@ export const googleAuth = (req: Request, res: Response, next: NextFunction) => {
 };
 
 // Google OAuth Callback
-export const googleCallback = (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('google', { failureRedirect: '/api/auth/login', session: true })(req, res, (err: Error | null) => {
+export const googleCallback = async (req: Request, res: Response, next: NextFunction) => {
+  passport.authenticate('google', { failureRedirect: '/api/auth/login', session: true })(req, res, async (err: Error | null) => {
     if (err) {
       return handleServerError(res, err, 'Google login error');
     }
@@ -41,7 +42,24 @@ export const googleCallback = (req: Request, res: Response, next: NextFunction) 
       return res.redirect('/api/auth/login');
     }
 
-    logger.info(`User ${req.user?.email || req.user?.displayName} logged in via Google`);
+    // Check if Google user exists in database, if not create one
+    const googleUser = req.user as IUser;
+    const existingUser = await User.findOne({ googleId: googleUser.googleId });
+    
+    if (!existingUser) {
+      // First-time Google login, creating new user
+      const newUser = new User({
+        email: googleUser.email,
+        displayName: googleUser.displayName,
+        googleId: googleUser.googleId,
+        role: 'user',  // Default role
+      }) as IUser;
+      await newUser.save();
+
+      logger.info(`New Google user ${googleUser.email} registered successfully.`);
+    }
+
+    logger.info(`Google user ${googleUser.email} logged in via Google`);
     res.redirect('/api/dashboard');
   });
 };
@@ -64,7 +82,8 @@ export const userSignUp = async (req: Request, res: Response) => {
       email,
       password: hashedPassword,
       displayName,
-      addresses: addresses || []
+      addresses: addresses || [],
+      role: 'user',  // Default role
     }) as IUser;
 
     await newUser.save();
@@ -129,26 +148,51 @@ export const userLogin = async (req: Request, res: Response) => {
   }
 };
 
-// Logout Handler
 export const logout = (req: Request, res: Response, next: NextFunction) => {
-  logger.info(`Logout attempt for user: ${req.user?.email || 'unknown'}`);
+  const user = req.user as { email?: string; displayName?: string };
 
-  // Ensure req.logout is called correctly
-  req.logout((err: Error | null) => {
-    if (err) {
-      logger.error(`Logout error: ${err.message}`, { stack: err.stack });
-      return handleServerError(res, err, 'Logout error');
-    }
+  // JWT-based logout (Google or token-based authentication)
+  const token = req.headers.authorization?.split(' ')[1];
 
-    req.session.destroy((destroyErr) => {
-      if (destroyErr) {
-        logger.error(`Session destroy error: ${destroyErr.message}`, { stack: destroyErr.stack });
-        return handleServerError(res, destroyErr, 'Session destroy error');
+  if (token) {
+    logger.info(`JWT-based logout for user: ${user?.email || user?.displayName}`);
+    
+    // Blacklist the token (assuming token expiration time is 1 hour)
+    const expirationTime = 60 * 60 * 1000; // 1 hour in milliseconds
+    blacklistToken(token, expirationTime);
+
+    // Clear the JWT token cookie
+    res.clearCookie('token'); // Assumes token is stored in a cookie
+    return res.status(200).json({ message: 'Logged out successfully' });
+  }
+
+  // Session-based logout
+  if (req.isAuthenticated()) {
+    req.logout((err: Error | null) => {
+      if (err) {
+        logger.error(`Logout error: ${err.message}`);
+        return res.status(500).json({ message: 'Logout error' });
       }
 
-      logger.info(`User ${req.user?.email || req.user?.displayName} logged out`);
-      res.clearCookie('connect.sid'); // Clear session cookie
-      return res.status(200).json({ message: 'Logged out successfully' }); // Change to JSON response
+      // Destroy session only if it exists
+      if (req.session) {
+        req.session.destroy((destroyErr) => {
+          if (destroyErr) {
+            logger.error(`Session destroy error: ${destroyErr.message}`);
+            return res.status(500).json({ message: 'Error clearing session' });
+          }
+
+          logger.info(`User ${user?.email || user?.displayName} logged out successfully`);
+          res.clearCookie('connect.sid'); // Clear session cookie
+          return res.status(200).json({ message: 'Logged out successfully' });
+        });
+      } else {
+        logger.warn('No active session found.');
+        return res.status(200).json({ message: 'Logged out successfully' });
+      }
     });
-  });
+  } else {
+    logger.warn('Unauthorized logout attempt.');
+    return res.status(401).json({ message: 'You must be logged in to log out' });
+  }
 };
