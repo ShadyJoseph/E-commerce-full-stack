@@ -1,23 +1,32 @@
-// Using a Map to store blacklisted tokens with expiration timestamps
 const tokenBlacklist = new Map<string, number>();
+const CLEANUP_INTERVAL_MS = process.env.BLACKLIST_CLEANUP_INTERVAL_MS || 60000; // Configurable cleanup interval
+
+// Utility to conditionally log in development mode
+const logIfDev = (message: string) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(message);
+  }
+};
 
 // Function to add a token to the blacklist with an expiration time
 export const blacklistToken = (token: string, expirationTimeInMs: number) => {
   const expirationTimestamp = Date.now() + expirationTimeInMs;
 
-  // Check if the token is already blacklisted
   if (tokenBlacklist.has(token)) {
-    console.log(`Token already blacklisted: ${token}`);
-    return; // Optional: Prevent re-adding the same token
+    logIfDev(`Token already blacklisted: ${token}`);
+    return;
   }
 
+  // Add token to the blacklist with its expiration time
   tokenBlacklist.set(token, expirationTimestamp);
-  console.log(`Token blacklisted: ${token}, expires at ${new Date(expirationTimestamp).toISOString()}`);
+  logIfDev(`Token blacklisted: ${token}, expires at ${new Date(expirationTimestamp).toISOString()}`);
 
-  // Schedule token removal from the blacklist after expiration
+  // Schedule token removal after expiration using `setImmediate` to prevent blocking the event loop
   setTimeout(() => {
-    tokenBlacklist.delete(token);
-    console.log(`Token removed from blacklist: ${token}`);
+    setImmediate(() => {
+      tokenBlacklist.delete(token);
+      logIfDev(`Token removed from blacklist: ${token}`);
+    });
   }, expirationTimeInMs);
 };
 
@@ -27,17 +36,17 @@ export const isTokenBlacklisted = (token: string): boolean => {
 
   if (expirationTimestamp !== undefined) {
     if (Date.now() < expirationTimestamp) {
-      console.log(`Token is still blacklisted: ${token}`);
-      return true; // Token is still valid in the blacklist
+      logIfDev(`Token is still blacklisted: ${token}`);
+      return true; // Token is still blacklisted
     } else {
-      // Token is expired, remove it from the blacklist
+      // Token has expired, remove it from the blacklist
       tokenBlacklist.delete(token);
-      console.log(`Expired token removed from blacklist: ${token}`);
+      logIfDev(`Expired token removed from blacklist: ${token}`);
     }
   }
 
-  console.log(`Token is not blacklisted: ${token}`);
-  return false; // Token is not blacklisted or has expired
+  logIfDev(`Token is not blacklisted: ${token}`);
+  return false; // Token is not blacklisted
 };
 
 // Optional: Function to clear all expired tokens from the blacklist
@@ -46,10 +55,10 @@ export const clearExpiredTokens = () => {
   for (const [token, expirationTimestamp] of tokenBlacklist.entries()) {
     if (expirationTimestamp < now) {
       tokenBlacklist.delete(token);
-      console.log(`Expired token cleared from blacklist: ${token}`);
+      logIfDev(`Expired token cleared from blacklist: ${token}`);
     }
   }
 };
 
 // Optional: Periodic cleanup of expired tokens
-setInterval(clearExpiredTokens, 60000); // Clean up every 60 seconds
+setInterval(clearExpiredTokens, CLEANUP_INTERVAL_MS as number); // Clean up every configured interval (default: 60 seconds)

@@ -5,7 +5,19 @@ import ErrorResponse from '../utils/errorResponse';
 
 // Get user profile
 export const getProfile = (req: Request, res: Response) => {
-  res.json({ user: req.user });
+  try {
+    const userProfile = req.user;
+    if (!userProfile) {
+      logger.warn(`Profile not found for user ID: ${req.user?._id}`);
+      return res.status(404).json(new ErrorResponse('Profile not found', 404));
+    }
+    
+    logger.info(`Profile retrieved for user ID: ${req.user?._id}`);
+    res.json({ success: true, user: userProfile });
+  } catch (error) {
+    logger.error('Error fetching profile', { error });
+    res.status(500).json(new ErrorResponse('Server error', 500));
+  }
 };
 
 // Update user profile
@@ -14,7 +26,7 @@ export const updateProfile = async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const updatedData = req.body;
 
-    const updatedUser = await User.findByIdAndUpdate(userId, updatedData, { new: true });
+    const updatedUser = await User.findByIdAndUpdate(userId, updatedData, { new: true, runValidators: true }).lean();
 
     if (!updatedUser) {
       logger.warn(`User not found during profile update: ${userId}`);
@@ -22,7 +34,7 @@ export const updateProfile = async (req: Request, res: Response) => {
     }
 
     logger.info(`User profile updated: ${updatedUser.email}`);
-    res.json({ message: 'Profile updated', user: updatedUser });
+    res.json({ success: true, message: 'Profile updated', user: updatedUser });
   } catch (error) {
     logger.error(`Error updating user profile for ID ${req.user?._id}`, { error });
     res.status(500).json(new ErrorResponse('Server error', 500));
@@ -32,7 +44,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 // View user cart
 export const viewCart = async (req: Request, res: Response) => {
   try {
-    const user = await User.findById(req.user?._id).populate('cart.product'); // Populate cart products
+    const user = await User.findById(req.user?._id).populate('cart.product').lean();
 
     if (!user || !user.cart) {
       logger.warn(`User or cart not found for user ID: ${req.user?._id}`);
@@ -40,7 +52,7 @@ export const viewCart = async (req: Request, res: Response) => {
     }
 
     logger.info(`Cart viewed for user ID: ${req.user?._id}`);
-    res.json({ cart: user.cart });
+    res.json({ success: true, cart: user.cart });
   } catch (error) {
     logger.error(`Error fetching cart for user ID ${req.user?._id}`, { error });
     res.status(500).json(new ErrorResponse('Server error', 500));
@@ -58,11 +70,11 @@ export const addToCart = async (req: Request, res: Response) => {
       return res.status(404).json(new ErrorResponse('User not found', 404));
     }
 
-    user.addToCart(product, size, quantity); // Utilize schema method for adding to cart
+    user.addToCart(product, size, quantity); // Use schema method for adding to cart
     await user.save();
 
     logger.info(`Item added to cart for user ID: ${req.user?._id}`, { product, size, quantity });
-    res.json({ message: 'Item added to cart', cart: user.cart });
+    res.json({ success: true, message: 'Item added to cart', cart: user.cart });
   } catch (error) {
     logger.error(`Error adding item to cart for user ID ${req.user?._id}`, { error });
     res.status(500).json(new ErrorResponse('Server error', 500));
@@ -80,11 +92,11 @@ export const removeFromCart = async (req: Request, res: Response) => {
       return res.status(404).json(new ErrorResponse('User or cart not found', 404));
     }
 
-    user.removeFromCart(productId, size); // Utilize schema method for removing from cart
+    user.removeFromCart(productId, size); // Use schema method for removing from cart
     await user.save();
 
     logger.info(`Item removed from cart for user ID: ${req.user?._id}`, { productId, size });
-    res.json({ message: 'Item removed from cart', cart: user.cart });
+    res.json({ success: true, message: 'Item removed from cart', cart: user.cart });
   } catch (error) {
     logger.error(`Error removing item from cart for user ID ${req.user?._id}`, { error });
     res.status(500).json(new ErrorResponse('Server error', 500));
@@ -105,14 +117,14 @@ export const addAddress = async (req: Request, res: Response) => {
     }
 
     if (!user.addresses) {
-      user.addresses = []; // Ensure addresses is an array
+      user.addresses = []; // Ensure addresses is initialized
     }
 
     user.addresses.push(address);
     await user.save();
 
     logger.info(`Address added for user ID: ${userId}`, { address });
-    res.json({ message: 'Address added', addresses: user.addresses });
+    res.json({ success: true, message: 'Address added', addresses: user.addresses });
   } catch (error) {
     logger.error(`Error adding address for user ID ${req.user?._id}`, { error });
     res.status(500).json(new ErrorResponse('Server error', 500));

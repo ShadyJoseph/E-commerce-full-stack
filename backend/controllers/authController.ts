@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
 import User, { IUser } from '../models/user';
 import logger from '../utils/logger';
-import { blacklistToken } from '../utils/blacklistToken'
+import { blacklistToken } from '../utils/blacklistToken';
 
 // Utility for error handling
 const handleServerError = (res: Response, error: Error, message: string) => {
@@ -16,6 +17,15 @@ const handleServerError = (res: Response, error: Error, message: string) => {
 const generateToken = (userId: string, role: string) => {
   return jwt.sign({ userId, role }, process.env.JWT_SECRET!, { expiresIn: '1d' });
 };
+
+// Rate limiting middleware (e.g., 5 requests per minute)
+const limiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 5, // Limit each IP to 5 requests per `window` per minute
+  message: 'Too many requests, please try again later.',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
 
 // Google OAuth Authentication
 export const googleAuth = (req: Request, res: Response, next: NextFunction) => {
@@ -42,25 +52,26 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
       return res.redirect('/api/auth/login');
     }
 
-    // Check if Google user exists in database, if not create one
     const googleUser = req.user as IUser;
-    const existingUser = await User.findOne({ googleId: googleUser.googleId });
-    
-    if (!existingUser) {
-      // First-time Google login, creating new user
-      const newUser = new User({
-        email: googleUser.email,
-        displayName: googleUser.displayName,
-        googleId: googleUser.googleId,
-        role: 'user',  // Default role
-      }) as IUser;
-      await newUser.save();
+    try {
+      const existingUser = await User.findOne({ googleId: googleUser.googleId });
+      if (!existingUser) {
+        // First-time Google login, creating new user
+        const newUser = new User({
+          email: googleUser.email,
+          displayName: googleUser.displayName,
+          googleId: googleUser.googleId,
+          role: 'user', // Default role
+        }) as IUser;
+        await newUser.save();
+        logger.info(`New Google user ${googleUser.email} registered successfully.`);
+      }
 
-      logger.info(`New Google user ${googleUser.email} registered successfully.`);
+      logger.info(`Google user ${googleUser.email} logged in via Google`);
+      res.redirect('/api/dashboard');
+    } catch (error) {
+      handleServerError(res, error as Error, 'Error during Google callback');
     }
-
-    logger.info(`Google user ${googleUser.email} logged in via Google`);
-    res.redirect('/api/dashboard');
   });
 };
 
@@ -83,7 +94,7 @@ export const userSignUp = async (req: Request, res: Response) => {
       password: hashedPassword,
       displayName,
       addresses: addresses || [],
-      role: 'user',  // Default role
+      role: 'user', // Default role
     }) as IUser;
 
     await newUser.save();
@@ -94,6 +105,12 @@ export const userSignUp = async (req: Request, res: Response) => {
 
     res
       .status(201)
+      .cookie('token', token, { 
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === 'production', 
+        sameSite: 'strict', 
+        maxAge: 24 * 60 * 60 * 1000 // 1 day
+      })
       .json({ message: 'Sign up successful', token, user: { email: newUser.email, displayName: newUser.displayName } });
   } catch (error) {
     if (error instanceof Error) {
@@ -135,7 +152,12 @@ export const userLogin = async (req: Request, res: Response) => {
 
     res
       .status(200)
-      .cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
+      .cookie('token', token, { 
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === 'production', 
+        sameSite: 'strict', 
+        maxAge: 24 * 60 * 60 * 1000 // 1 day
+      })
       .json({ message: 'Login successful', token, user: { email: user.email, displayName: user.displayName, role: user.role } });
   } catch (error) {
     if (error instanceof Error) {
@@ -148,6 +170,7 @@ export const userLogin = async (req: Request, res: Response) => {
   }
 };
 
+// User Logout
 export const logout = (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as { email?: string; displayName?: string };
 
@@ -156,10 +179,23 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
 
   if (token) {
     logger.info(`JWT-based logout for user: ${user?.email || user?.displayName}`);
-    
-    // Blacklist the token (assuming token expiration time is 1 hour)
-    const expirationTime = 60 * 60 * 1000; // 1 hour in milliseconds
-    blacklistToken(token, expirationTime);
+
+    try {
+      // Decode token to get its expiration time
+      const decodedToken = jwt.decode(token) as JwtPayload | null;
+
+      if (decodedToken && decodedToken.exp) {
+        const currentTime = Math.floor(Date.now() / 1000);
+        const timeToExpire = (decodedToken.exp - currentTime) * 1000; // convert to milliseconds
+
+        // Blacklist the token for its remaining lifetime
+        blacklistToken(token, timeToExpire);
+      } else {
+        logger.warn('Could not decode JWT expiration time.');
+      }
+    } catch (error:any) {
+      logger.error(`Error decoding JWT token: ${error.message}`);
+    }
 
     // Clear the JWT token cookie
     res.clearCookie('token'); // Assumes token is stored in a cookie
