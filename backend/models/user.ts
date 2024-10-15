@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import validator from 'validator';
-import { IProduct } from './product'; // Import Product Interface
+import logger from '../utils/logger';
 
 // Define an enum for user roles
 export enum UserRole {
@@ -92,18 +92,17 @@ const UserSchema: Schema<IUser> = new Schema(
   { timestamps: true }
 );
 
-// Hash the password before saving the user
-UserSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password!, salt);
-  next();
-});
-
 // Method to compare password with hashed password
 UserSchema.methods.comparePassword = async function (password: string): Promise<boolean> {
+  try {
+    return await bcrypt.compare(password, this.password || '');
+  } catch (error) {
+    throw new Error('Error comparing passwords');
+  }
   return await bcrypt.compare(password, this.password || '');
 };
+ 
+
 
 // Method to add an address
 UserSchema.methods.addAddress = async function (address: Address): Promise<void> {
@@ -113,7 +112,7 @@ UserSchema.methods.addAddress = async function (address: Address): Promise<void>
 
 // Method to add an item to the cart
 UserSchema.methods.addToCart = async function (productId: mongoose.Types.ObjectId, size: string, quantity: number): Promise<void> {
-  const itemIndex = this.cart?.findIndex((item:CartItem) => item.product.toString() === productId.toString() && item.size === size) ?? -1;
+  const itemIndex = this.cart?.findIndex((item: CartItem) => item.product.toString() === productId.toString() && item.size === size) ?? -1;
   
   if (itemIndex > -1) {
     // Update quantity if the item is already in the cart
@@ -128,7 +127,7 @@ UserSchema.methods.addToCart = async function (productId: mongoose.Types.ObjectI
 
 // Method to remove an item from the cart
 UserSchema.methods.removeFromCart = async function (productId: mongoose.Types.ObjectId, size: string): Promise<void> {
-  this.cart = this.cart?.filter((item:CartItem) => !(item.product.toString() === productId.toString() && item.size === size)) ?? [];
+  this.cart = this.cart?.filter((item: CartItem) => !(item.product.toString() === productId.toString() && item.size === size)) ?? [];
   await this.save();
 };
 

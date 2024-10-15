@@ -113,7 +113,6 @@ export const userSignUp = async (req: Request, res: Response) => {
   }
 };
 
-// User Login
 export const userLogin = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
@@ -128,6 +127,10 @@ export const userLogin = async (req: Request, res: Response) => {
     }
 
     logger.info(`User found: ${user.email}. Proceeding to password comparison.`);
+
+    // Log the plain password for testing purposes (remove in production!)
+    logger.debug(`Attempting to compare password for user ${user.email}:`, { enteredPassword: password, storedHash: user.password });
+
     const passwordMatch = await user.comparePassword(password);
 
     if (!passwordMatch) {
@@ -159,6 +162,8 @@ export const userLogin = async (req: Request, res: Response) => {
     }
   }
 };
+
+
 
 // User Logout
 export const logout = (req: Request, res: Response, next: NextFunction) => {
