@@ -4,7 +4,7 @@ export const validateUpdateProfile = [
   body('displayName')
     .optional()
     .isString().withMessage('Display name must be a string')
-    .isLength({ max: 100 }).withMessage('Display name cannot exceed 100 characters'),
+    .isLength({min:2, max: 100 }).withMessage('Display name cannot exceed 100 characters and must be at least 2 characters long'),
 
   body('email')
     .optional()
