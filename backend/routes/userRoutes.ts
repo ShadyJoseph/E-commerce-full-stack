@@ -7,14 +7,13 @@ import {
   removeFromCart,
   addAddress,
 } from '../controllers/userController';
-import { verifyJWTToken } from '../middlewares/authValidation'; // Adjust the path as necessary
+import { verifyJWTToken,validateRequest } from '../middlewares/authValidation'; 
 import {
   validateUpdateProfile,
   validateAddToCart,
   validateRemoveFromCart,
-  validateAddAddress,
-  validateRequest,
-} from '../middlewares/userValidation'; // Adjust the path as necessary
+  validateAddAddress
+} from '../middlewares/userValidation'; 
 
 const router = Router();
 

@@ -62,7 +62,7 @@ app.use(passport.session());
 
 // CORS Setup
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' ? 'https://yourproductiondomain.com' : '*',
+  origin: process.env.NODE_ENV === 'production' ? 'https://yourproductiondomain.com' : 'http://localhost:5000',
   credentials: true,
 };
 app.use(cors(corsOptions));

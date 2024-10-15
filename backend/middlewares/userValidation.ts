@@ -1,6 +1,4 @@
-import { body, param, validationResult } from 'express-validator';
-import { Request, Response, NextFunction } from 'express';
-
+import { body, param} from 'express-validator';
 // Validation for updating user profile
 export const validateUpdateProfile = [
   body('displayName')
@@ -65,12 +63,3 @@ export const validateAddAddress = [
     .exists().withMessage('Country is required')
     .isString().withMessage('Country must be a string'),
 ];
-
-// Middleware to handle validation errors
-export const validateRequest = (req: Request, res: Response, next: NextFunction) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-  next();
-};

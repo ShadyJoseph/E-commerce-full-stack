@@ -13,7 +13,7 @@ import {
   validateUserSignUp,
   validateUserLogin,
   validateRequest,
-} from '../middlewares/authValidation'; // Adjust the path as necessary
+} from '../middlewares/authValidation'; 
 
 const router = Router();
 
@@ -24,8 +24,6 @@ router.get('/auth/google/callback', googleCallback);
 // User-based Sign-up and Login Routes
 router.post('/auth/signup', validateUserSignUp, validateRequest, userSignUp);
 router.post('/auth/login', validateUserLogin, validateRequest, userLogin);
-
-// Logout Route - consider using POST instead of GET for better security
 router.post('/auth/logout', isAuthenticated, logout);
 
 

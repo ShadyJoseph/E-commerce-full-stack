@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose'; // Add mongoose import
 import User from '../models/user'; // Import User model
 import logger from '../utils/logger'; 
 import ErrorResponse from '../utils/errorResponse';
@@ -70,7 +71,9 @@ export const addToCart = async (req: Request, res: Response) => {
       return res.status(404).json(new ErrorResponse('User not found', 404));
     }
 
-    user.addToCart(product, size, quantity); // Use schema method for adding to cart
+    const productId = new mongoose.Types.ObjectId(product); // Convert product to ObjectId
+
+    user.addToCart(productId, size, quantity); // Pass the ObjectId
     await user.save();
 
     logger.info(`Item added to cart for user ID: ${req.user?._id}`, { product, size, quantity });
@@ -92,7 +95,9 @@ export const removeFromCart = async (req: Request, res: Response) => {
       return res.status(404).json(new ErrorResponse('User or cart not found', 404));
     }
 
-    user.removeFromCart(productId, size); // Use schema method for removing from cart
+    const productObjectId = new mongoose.Types.ObjectId(productId); // Convert productId to ObjectId
+
+    user.removeFromCart(productObjectId, size); // Pass the ObjectId
     await user.save();
 
     logger.info(`Item removed from cart for user ID: ${req.user?._id}`, { productId, size });

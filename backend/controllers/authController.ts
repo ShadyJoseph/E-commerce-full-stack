@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import bcrypt from 'bcryptjs';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-import rateLimit from 'express-rate-limit';
+import jwt from 'jsonwebtoken';
 import User, { IUser } from '../models/user';
 import logger from '../utils/logger';
 import { blacklistToken } from '../utils/blacklistToken';
@@ -17,15 +16,6 @@ const handleServerError = (res: Response, error: Error, message: string) => {
 const generateToken = (userId: string, role: string) => {
   return jwt.sign({ userId, role }, process.env.JWT_SECRET!, { expiresIn: '1d' });
 };
-
-// Rate limiting middleware (e.g., 5 requests per minute)
-const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 5, // Limit each IP to 5 requests per `window` per minute
-  message: 'Too many requests, please try again later.',
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-});
 
 // Google OAuth Authentication
 export const googleAuth = (req: Request, res: Response, next: NextFunction) => {
@@ -182,7 +172,7 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
 
     try {
       // Decode token to get its expiration time
-      const decodedToken = jwt.decode(token) as JwtPayload | null;
+      const decodedToken = jwt.decode(token) as jwt.JwtPayload | null;
 
       if (decodedToken && decodedToken.exp) {
         const currentTime = Math.floor(Date.now() / 1000);

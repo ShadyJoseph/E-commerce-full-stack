@@ -14,32 +14,32 @@ export interface IProduct extends Document {
   name: string;
   description: string;
   price: number;
-  imageUrls: string[]; // Support multiple images
-  category: ProductCategory; // Product category
-  availableSizes: { size: string; stock: number }[]; // Sizes with stock quantities
-  createdAt: Date; // Creation date
-  updatedAt: Date; // Last updated date
-  totalStock: number; // Total stock across all sizes
-  reduceStock(size: string, quantity: number): Promise<void>; // Method to reduce stock
+  imageUrls: string[];
+  category: ProductCategory;
+  availableSizes: { size: string; stock: number }[];
+  totalStock: number;
+  createdAt: Date;
+  updatedAt: Date;
+  reduceStock(size: string, quantity: number): Promise<void>;
 }
 
 // Define the product schema
 const productSchema: Schema<IProduct> = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true, maxlength: 100 }, // Max length for name
-    description: { type: String, required: true, trim: true, maxlength: 500 }, // Max length for description
-    price: { type: Number, required: true, min: 0 }, // Ensure price is non-negative
-    imageUrls: { type: [String], required: true }, // Support multiple images
-    category: { type: String, enum: Object.values(ProductCategory), required: true, trim: true }, // Enum for category
+    name: { type: String, required: true, trim: true, maxlength: 100 },
+    description: { type: String, required: true, trim: true, maxlength: 500 },
+    price: { type: Number, required: true, min: 0 },
+    imageUrls: { type: [String], required: true },
+    category: { type: String, enum: Object.values(ProductCategory), required: true, trim: true },
     availableSizes: [
       {
-        size: { type: String, required: true }, // Size name (e.g., 'S', 'M', 'L')
-        stock: { type: Number, required: true, min: 0 }, // Stock quantity for this size
+        size: { type: String, required: true },
+        stock: { type: Number, required: true, min: 0 },
       },
     ],
   },
   {
-    timestamps: true, // Automatically manage createdAt and updatedAt fields
+    timestamps: true,
   }
 );
 
