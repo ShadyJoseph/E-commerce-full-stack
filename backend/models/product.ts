@@ -9,6 +9,17 @@ export enum ProductCategory {
   Kids = 'kids',
 }
 
+// Define an interface for size and color segments
+interface ISize {
+  size: string;
+  stock: number;
+}
+
+interface IColor {
+  color: string;
+  availableSizes: ISize[];
+}
+
 // Define an interface for the Product document
 export interface IProduct extends Document {
   name: string;
@@ -16,11 +27,11 @@ export interface IProduct extends Document {
   price: number;
   imageUrls: string[];
   category: ProductCategory;
-  availableSizes: { size: string; stock: number }[];
+  colors: IColor[];
   totalStock: number;
   createdAt: Date;
   updatedAt: Date;
-  reduceStock(size: string, quantity: number): Promise<void>;
+  reduceStock(color: string, size: string, quantity: number): Promise<void>;
 }
 
 // Define the product schema
@@ -31,35 +42,49 @@ const productSchema: Schema<IProduct> = new mongoose.Schema(
     price: { type: Number, required: true, min: 0 },
     imageUrls: { type: [String], required: true },
     category: { type: String, enum: Object.values(ProductCategory), required: true, trim: true },
-    availableSizes: [
+    colors: [
       {
-        size: { type: String, required: true },
-        stock: { type: Number, required: true, min: 0 },
+        color: { type: String, required: true, trim: true },
+        availableSizes: [
+          {
+            size: { type: String, required: true },
+            stock: { type: Number, required: true, min: 0 },
+          },
+        ],
       },
     ],
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
-// Virtual property to calculate total stock
+// Virtual property to calculate total stock across all colors and sizes
 productSchema.virtual('totalStock').get(function (this: IProduct) {
-  return this.availableSizes.reduce((total, size) => total + size.stock, 0);
+  return this.colors.reduce((total, colorObj) => {
+    return total + colorObj.availableSizes.reduce((sizeTotal, size) => sizeTotal + size.stock, 0);
+  }, 0);
 });
 
-// Method to reduce stock
-productSchema.methods.reduceStock = async function (size: string, quantity: number): Promise<void> {
-  const sizeIndex = this.availableSizes.findIndex((s:any) => s.size === size);
+// Method to reduce stock for a specific color and size
+productSchema.methods.reduceStock = async function (color: string, size: string, quantity: number): Promise<void> {
+  const colorIndex = this.colors.findIndex((c: IColor) => c.color === color); 
+  if (colorIndex === -1) {
+    throw new Error('Invalid color');
+  }
+
+  const sizeIndex = this.colors[colorIndex].availableSizes.findIndex((s: ISize) => s.size === size); 
   if (sizeIndex === -1) {
     throw new Error('Invalid size');
   }
 
-  if (this.availableSizes[sizeIndex].stock < quantity) {
+  if (this.colors[colorIndex].availableSizes[sizeIndex].stock < quantity) {
     throw new Error('Insufficient stock');
   }
 
-  this.availableSizes[sizeIndex].stock -= quantity;
+  this.colors[colorIndex].availableSizes[sizeIndex].stock -= quantity;
   await this.save();
 };
 

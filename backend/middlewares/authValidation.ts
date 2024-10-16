@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import logger from '../utils/logger';
 import User, { IUser } from '../models/user';
 import { body, validationResult } from 'express-validator';
-import { blacklistToken, isTokenBlacklisted } from '../utils/blacklistToken';
+import { isTokenBlacklisted } from '../utils/blacklistToken';
 
 // Utility function for logging
 const logAuthAttempt = (req: Request, user: IUser | null, isSuccess: boolean) => {
@@ -106,32 +106,38 @@ export const requireAuthentication = (req: Request, res: Response, next: NextFun
   return res.status(401).json({ message: 'Authentication required' });
 };
 
-// User signup validation middleware
 export const validateUserSignUp = [
   body('displayName')
     .exists().withMessage('Display name is required')
     .isString().withMessage('Display name must be a string')
+    .trim()
+    .escape()
     .isLength({ max: 100 }).withMessage('Display name cannot exceed 100 characters'),
 
   body('email')
     .exists().withMessage('Email is required')
-    .isEmail().withMessage('Please provide a valid email'),
+    .isEmail().withMessage('Please provide a valid email')
+    .normalizeEmail(),
 
   body('password')
     .exists().withMessage('Password is required')
     .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long')
     .matches(/\d/).withMessage('Password must contain at least one number')
-    .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),
+    .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character')
+    .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
+    .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter'),
 ];
 
 // User login validation middleware
 export const validateUserLogin = [
   body('email')
     .exists().withMessage('Email is required')
-    .isEmail().withMessage('Please provide a valid email'),
+    .isEmail().withMessage('Please provide a valid email')
+    .normalizeEmail(),
 
   body('password')
-    .exists().withMessage('Password is required'),
+    .exists().withMessage('Password is required')
+    .notEmpty().withMessage('Password cannot be empty')
 ];
 
 // Middleware to handle validation errors
@@ -139,7 +145,11 @@ export const validateRequest = (req: Request, res: Response, next: NextFunction)
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     logger.warn(`Validation failed: ${JSON.stringify(errors.array())}`);
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({
+      status: 'error',
+      message: 'Validation failed',
+      errors: errors.array()
+    });
   }
   next();
 };

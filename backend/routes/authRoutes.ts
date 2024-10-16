@@ -18,7 +18,7 @@ import {
 const router = Router();
 
 // Google Auth Routes
-router.get('/auth/google', googleAuth);
+router.get('/auth/google', googleAuth);//signup using google
 router.get('/auth/google/callback', googleCallback);
 
 // User-based Sign-up and Login Routes
