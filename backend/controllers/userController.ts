@@ -3,6 +3,7 @@ import mongoose from 'mongoose'; // Add mongoose import
 import User from '../models/user'; // Import User model
 import logger from '../utils/logger'; 
 import ErrorResponse from '../utils/errorResponse';
+import bcrypt from 'bcryptjs';
 
 // Get user profile
 export const getProfile = (req: Request, res: Response) => {
@@ -21,13 +22,23 @@ export const getProfile = (req: Request, res: Response) => {
   }
 };
 
+
 // Update user profile
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const userId = req.user?._id;
-    const updatedData = req.body;
+    const updatedData = { ...req.body };
 
-    const updatedUser = await User.findByIdAndUpdate(userId, updatedData, { new: true, runValidators: true }).lean();
+    // Check if password is being updated, if so, hash it
+    if (updatedData.password) {
+      logger.info(`Updating password for user: ${userId}`);
+      updatedData.password = await bcrypt.hash(updatedData.password, 12);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updatedData, {
+      new: true,
+      runValidators: true,
+    }).lean();
 
     if (!updatedUser) {
       logger.warn(`User not found during profile update: ${userId}`);
@@ -41,6 +52,7 @@ export const updateProfile = async (req: Request, res: Response) => {
     res.status(500).json(new ErrorResponse('Server error', 500));
   }
 };
+
 
 // View user cart
 export const viewCart = async (req: Request, res: Response) => {
