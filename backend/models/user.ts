@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import validator from 'validator';
-import logger from '../utils/logger';
 
 // Define an enum for user roles
 export enum UserRole {
@@ -102,8 +101,6 @@ UserSchema.methods.comparePassword = async function (password: string): Promise<
   return await bcrypt.compare(password, this.password || '');
 };
  
-
-
 // Method to add an address
 UserSchema.methods.addAddress = async function (address: Address): Promise<void> {
   this.addresses?.push(address);
@@ -111,9 +108,12 @@ UserSchema.methods.addAddress = async function (address: Address): Promise<void>
 };
 
 // Method to add an item to the cart
+// Method to add an item to the cart
 UserSchema.methods.addToCart = async function (productId: mongoose.Types.ObjectId, size: string, quantity: number): Promise<void> {
-  const itemIndex = this.cart?.findIndex((item: CartItem) => item.product.toString() === productId.toString() && item.size === size) ?? -1;
-  
+  const itemIndex = this.cart?.findIndex(
+    (item: CartItem) => item.product.toString() === productId.toString() && item.size === size
+  ) ?? -1;
+
   if (itemIndex > -1) {
     // Update quantity if the item is already in the cart
     this.cart![itemIndex].quantity += quantity;
@@ -121,9 +121,11 @@ UserSchema.methods.addToCart = async function (productId: mongoose.Types.ObjectI
     // Add new item to the cart
     this.cart?.push({ product: productId, size, quantity });
   }
-  
+
+  // Make sure to save changes to the database
   await this.save();
 };
+
 
 // Method to remove an item from the cart
 UserSchema.methods.removeFromCart = async function (productId: mongoose.Types.ObjectId, size: string): Promise<void> {

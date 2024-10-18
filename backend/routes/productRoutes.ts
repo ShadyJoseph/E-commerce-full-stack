@@ -7,7 +7,7 @@ import {
   deleteProduct,
 } from '../controllers/productController';
 import { isAuthenticated, isAdmin } from '../middlewares/authValidation';
-import { validateProduct, validateProductRequest } from '../middlewares/productValidation'; // Import validateProductRequest
+import { validateProduct, validateProductRequest } from '../middlewares/productValidation'; 
 
 const router = Router();
 
