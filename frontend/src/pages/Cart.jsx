@@ -21,11 +21,6 @@ const Cart = () => {
             {cart.map((item) => (
               <div key={item.id} className="flex items-center justify-between bg-green-100 rounded-lg p-4 shadow-md">
                 <div className="flex items-center">
-                  <img
-                    src="https://via.placeholder.com/100" // Placeholder image
-                    alt={item.name}
-                    className="w-16 h-16 object-cover rounded-md mr-4"
-                  />
                   <div>
                     <h3 className="font-bold text-lg">{item.name}</h3>
                     <p className="text-gray-600">${item.price.toFixed(2)}</p>
