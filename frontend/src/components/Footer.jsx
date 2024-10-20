@@ -12,7 +12,7 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
           <img src={Logo} alt="App Logo" className="h-12 w-auto" />
           <span className="text-2xl font-bold tracking-wide text-white">
-            Your App Name
+            Good Grabs
           </span>
         </div>
 
@@ -60,7 +60,7 @@ const Footer = () => {
       {/* Copyright Section */}
       <div className="flex justify-center flex-col items-center mt-6">
         <p className="text-sm md:text-base text-gray-10 mb-4 text-center">
-          &copy; {new Date().getFullYear()} Your App Name. All Rights Reserved. 
+          &copy; {new Date().getFullYear()} Good Grabs . All Rights Reserved. 
           <span className="text-red-500">
             <BsFillHeartFill className="inline-block h-4 w-4 mx-1" />
           </span>

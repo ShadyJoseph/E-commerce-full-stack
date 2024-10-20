@@ -34,7 +34,7 @@ const Header = () => {
           </Link>
           <h1 className="text-white text-3xl font-extrabold">
             <Link to="/" className="hover:text-yellow-300 transition duration-200">
-              Your App Name
+              Good Grabs
             </Link>
           </h1>
         </div>
