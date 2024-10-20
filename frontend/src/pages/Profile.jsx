@@ -44,9 +44,6 @@ const ProfilePage = () => {
 
         {/* Action Buttons */}
         <div className="mt-8 flex justify-center space-x-4">
-          <Link to="/edit-profile" className="bg-green-600 text-white py-2 px-6 rounded-full shadow-lg hover:bg-green-700 transition duration-300">
-            Edit Profile
-          </Link>
           <Link to="/restaurants" className="bg-gray-300 text-gray-800 py-2 px-6 rounded-full shadow-lg hover:bg-gray-400 transition duration-300">
             Explore Restaurants
           </Link>
