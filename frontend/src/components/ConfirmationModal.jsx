@@ -7,7 +7,7 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, isLoading }) => {
       <div className="bg-white p-6 rounded-lg shadow-lg text-center space-y-4">
         <h2 className="text-xl font-semibold">{message}</h2>
         {isLoading ? (
-          <Loader height="40" width="40" color="#3498db" />
+          <Loader height="40" width="40" color="green" />
         ) : (
           <div className="flex justify-center space-x-4">
             <button

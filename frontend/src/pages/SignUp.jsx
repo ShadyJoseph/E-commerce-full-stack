@@ -4,7 +4,7 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import Loader from '../components/Loader';
-import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { useAuth } from '../context/AuthContext'; 
 
 // Reusable Input Field Component
 const InputField = ({ id, label, type, formik, showToggle, toggleVisibility }) => (
@@ -40,7 +40,7 @@ const InputField = ({ id, label, type, formik, showToggle, toggleVisibility }) =
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const { register } = useAuth(); // Get register function from context
+  const { register } = useAuth(); 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -151,7 +151,7 @@ const SignUp = () => {
   className={`w-full p-2 rounded transition duration-200 flex items-center justify-center ${
     formik.isSubmitting
       ? 'bg-gray-400 cursor-not-allowed'
-      : 'bg-green-500 text-white hover:bg-green-600' // Changed to green
+      : 'bg-green-500 text-white hover:bg-green-600'
   }`}
   disabled={formik.isSubmitting}
 >
@@ -161,7 +161,7 @@ const SignUp = () => {
 
         <div className="mt-4 text-sm text-center">
           <span>Already have an account? </span>
-          <Link to="/signin" className="text-primaryColor hover:underline">
+          <Link to="/signin" className="text-green-500 hover:underline">
             Sign In
           </Link>
         </div>

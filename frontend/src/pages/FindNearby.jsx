@@ -31,30 +31,38 @@ const FindNearbyRestaurants = () => {
   };
 
   return (
-    <div className="text-center py-12 bg-white shadow-lg rounded-lg p-6 max-w-md mx-auto transition-all duration-300">
-      <h2 className="text-3xl font-bold mb-4 flex items-center justify-center">
-        <FaMapMarkerAlt className="text-green-600 mr-2" />
-        Finding Nearby Restaurants...
-      </h2>
-      
-      {loading ? (
-        <div className="flex flex-col items-center">
-          <Loader height="80" width="80" color="green" />
-          <p className="text-lg mt-4 animate-fade-in">Detecting your location...</p>
-        </div>
-      ) : locationDetected ? (
-        <div>
-          <p className="text-lg animate-fade-in">Location detected! Redirecting you to nearby restaurants...</p>
-        </div>
-      ) : (
-        <button
-          onClick={handleFindRestaurants}
-          className="bg-green-600 text-white py-3 px-8 rounded-full shadow-lg hover:bg-green-700 transition duration-300 flex items-center justify-center mx-auto"
-        >
-          <FaMapMarkerAlt className="mr-2" />
+    <div className=" flex items-center justify-center bg-gray-100">
+      <div className="bg-white shadow-xl rounded-lg p-8 lg:p-16 w-full max-w-3xl mx-auto transition-all duration-300">
+        <h2 className="text-3xl font-bold mb-6 flex items-center justify-center text-gray-900">
+          <FaMapMarkerAlt className="text-green-600 mr-3" />
           Find Nearby Restaurants
-        </button>
-      )}
+        </h2>
+
+        {loading ? (
+          <div className="flex flex-col items-center">
+            <Loader height="80" width="80" color="green" />
+            <p className="text-lg mt-4 text-gray-600 animate-fade-in">
+              Detecting your location...
+            </p>
+          </div>
+        ) : locationDetected ? (
+          <div className="flex flex-col items-center">
+            <p className="text-lg mt-4 text-green-600 animate-fade-in">
+              Location detected! Redirecting to nearby restaurants...
+            </p>
+          </div>
+        ) : (
+          <div className="flex justify-center">
+            <button
+              onClick={handleFindRestaurants}
+              className="bg-gradient-to-r from-green-500 to-green-700 text-white py-3 px-10 rounded-full shadow-md hover:from-green-600 hover:to-green-800 hover:shadow-lg transition-all duration-300 ease-in-out flex items-center justify-center"
+            >
+              <FaMapMarkerAlt className="mr-2" />
+              Find Nearby Restaurants
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,46 +1,47 @@
+
 import React from 'react';
 
 const AboutUsPage = () => {
   return (
     <div className="bg-gray-100 min-h-screen mt-16 p-6">
-      <div className="container mx-auto bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-4xl font-bold mb-6 text-center">About Us</h1>
+      <div className="container mx-auto bg-white rounded-xl shadow-xl p-12 md:p-16 lg:p-20">
+        <h1 className="text-5xl font-extrabold mb-8 text-center text-green-700">About Us</h1>
         
         {/* Mission Section */}
-        <section className="mb-8">
-          <h2 className="text-3xl font-semibold mb-4">Our Mission</h2>
-          <p className="text-gray-700 text-lg">
-            At FoodSaver, our mission is to combat food waste and hunger by connecting consumers with local restaurants. We believe that everyone deserves access to quality food, and by facilitating the sale of unsold meals at a discount, we aim to make a positive impact on both the environment and our community.
+        <section className="mb-12">
+          <h2 className="text-4xl font-bold mb-6 text-green-600">Our Mission</h2>
+          <p className="text-gray-800 text-lg leading-relaxed">
+            At <strong>Good Grabs</strong>, our mission is to create a world where food waste is minimized, and everyone has access to fresh, affordable meals. We bridge the gap between local restaurants with surplus food and customers looking for quality meals at a discount. Together, we aim to reduce waste and fight hunger, one meal at a time.
           </p>
         </section>
 
         {/* Vision Section */}
-        <section className="mb-8">
-          <h2 className="text-3xl font-semibold mb-4">Our Vision</h2>
-          <p className="text-gray-700 text-lg">
-            We envision a world where no food goes to waste and everyone has access to delicious, affordable meals. By partnering with local restaurants and engaging our community, we strive to create a sustainable food system that benefits everyone involved.
+        <section className="mb-12">
+          <h2 className="text-4xl font-bold mb-6 text-green-600">Our Vision</h2>
+          <p className="text-gray-800 text-lg leading-relaxed">
+            We envision a sustainable future where no food goes to waste. By partnering with local restaurants and our passionate community, we strive to build a system where everyone benefits—helping the environment, supporting local businesses, and providing affordable meals to those in need.
           </p>
         </section>
 
         {/* Values Section */}
-        <section className="mb-8">
-          <h2 className="text-3xl font-semibold mb-4">Our Values</h2>
-          <ul className="list-disc pl-5 text-gray-700">
-            <li className="mb-2">✨ **Sustainability**: We prioritize environmentally-friendly practices in our operations.</li>
-            <li className="mb-2">🤝 **Community**: We believe in the power of community and collaboration.</li>
-            <li className="mb-2">❤️ **Compassion**: We are dedicated to helping those in need by reducing food waste.</li>
-            <li className="mb-2">🌱 **Innovation**: We embrace technology to improve our services and reach more people.</li>
+        <section className="mb-12">
+          <h2 className="text-4xl font-bold mb-6 text-green-600">Our Core Values</h2>
+          <ul className="list-disc pl-6 text-gray-800 text-lg leading-relaxed">
+            <li className="mb-4"><span className="font-semibold">✨ Sustainability</span>: We’re committed to eco-friendly practices, reducing food waste, and promoting a circular food economy.</li>
+            <li className="mb-4"><span className="font-semibold">🤝 Community</span>: We believe in the power of collaboration, supporting local businesses, and strengthening our neighborhoods.</li>
+            <li className="mb-4"><span className="font-semibold">❤️ Compassion</span>: By connecting surplus food with those who need it most, we act with empathy and aim to make a difference.</li>
+            <li className="mb-4"><span className="font-semibold">🌱 Innovation</span>: We leverage technology to revolutionize how food is distributed and to ensure everyone has access to nutritious meals.</li>
           </ul>
         </section>
 
         {/* Join Us Section */}
         <section>
-          <h2 className="text-3xl font-semibold mb-4">Join Us in Making a Difference!</h2>
-          <p className="text-gray-700 text-lg mb-4">
-            Whether you're a food lover, a restaurant owner, or someone passionate about sustainability, we invite you to join our mission. Together, we can make a significant impact on our environment and our communities.
+          <h2 className="text-4xl font-bold mb-6 text-green-600">Join Us on Our Journey!</h2>
+          <p className="text-gray-800 text-lg leading-relaxed mb-6">
+            Whether you're a restaurant owner looking to reduce food waste or someone who wants to support sustainable dining, we invite you to be part of our mission. Join us as we build a more sustainable and compassionate food system—one where every meal counts.
           </p>
-          <p className="text-gray-700 text-lg mb-4">
-            Explore our platform today and become part of the solution. Let's save food and save lives!
+          <p className="text-gray-800 text-lg leading-relaxed">
+            Ready to make a difference? Explore our platform, connect with local restaurants, and help create a brighter future—together, we can save food and improve lives!
           </p>
         </section>
       </div>
