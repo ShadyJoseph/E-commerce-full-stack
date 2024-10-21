@@ -5,7 +5,7 @@ import { BsFillHeartFill } from 'react-icons/bs';
 
 const Footer = () => {
   return (
-    <footer className="bg-gradient-to-r from-green-700 to-green-900 text-white py-12 mt-8">
+    <footer className="bg-gradient-to-r from-green-700 to-green-900 text-white py-8">
       <div className="container mx-auto flex flex-col md:flex-row items-center justify-between px-6">
 
         {/* Logo Section */}

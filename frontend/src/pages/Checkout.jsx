@@ -86,7 +86,7 @@ const CheckOutDetails = () => {
                     value={formData[field]}
                     onChange={handleChange}
                     placeholder={`Enter your ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
-                    className={`mt-2 focus:ring-green-500 focus:border-green-500 block w-full h-12 rounded-md shadow-sm sm:text-sm border ${errors[field] ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`mt-2 p-2 focus:ring-green-500 focus:border-green-500 block w-full h-12 rounded-md shadow-sm sm:text-sm border ${errors[field] ? 'border-red-500' : 'border-gray-300'}`}
                   />
                   {errors[field] && <p className="mt-1 text-sm text-red-500">{errors[field]}</p>}
                 </div>
@@ -132,7 +132,7 @@ const CheckOutDetails = () => {
                     value={formData.cardNumber}
                     onChange={handleChange}
                     placeholder="Enter your card number"
-                    className={`mt-2 focus:ring-green-500 focus:border-green-500 block w-full h-12 rounded-md shadow-sm sm:text-sm border ${errors.cardNumber ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`mt-2 p-2 focus:ring-green-500 focus:border-green-500 block w-full h-12 rounded-md shadow-sm sm:text-sm border ${errors.cardNumber ? 'border-red-500' : 'border-gray-300'}`}
                   />
                   {errors.cardNumber && <p className="mt-1 text-sm text-red-500">{errors.cardNumber}</p>}
                 </div>
@@ -145,7 +145,7 @@ const CheckOutDetails = () => {
                     value={formData.expiryDate}
                     onChange={handleChange}
                     placeholder="MM/YY"
-                    className={`mt-2 focus:ring-green-500 focus:border-green-500 block w-full h-12 rounded-md shadow-sm sm:text-sm border ${errors.expiryDate ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`mt-2 p-2 focus:ring-green-500 focus:border-green-500 block w-full h-12 rounded-md shadow-sm sm:text-sm border ${errors.expiryDate ? 'border-red-500' : 'border-gray-300'}`}
                   />
                   {errors.expiryDate && <p className="mt-1 text-sm text-red-500">{errors.expiryDate}</p>}
                 </div>
@@ -158,7 +158,7 @@ const CheckOutDetails = () => {
                     value={formData.cvv}
                     onChange={handleChange}
                     placeholder="Enter CVV"
-                    className={`mt-2 focus:ring-green-500 focus:border-green-500 block w-full h-12 rounded-md shadow-sm sm:text-sm border ${errors.cvv ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`mt-2 p-2 focus:ring-green-500 focus:border-green-500 block w-full h-12 rounded-md shadow-sm sm:text-sm border ${errors.cvv ? 'border-red-500' : 'border-gray-300'}`}
                   />
                   {errors.cvv && <p className="mt-1 text-sm text-red-500">{errors.cvv}</p>}
                 </div>

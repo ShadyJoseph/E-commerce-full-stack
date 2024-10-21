@@ -8,10 +8,10 @@ const HomePage = () => {
   const { state } = useAuth();
 
   return (
-    <div className="bg-gray-50 min-h-screen mt-16">
+    <div className="bg-gray-50 min-h-screen mt-13">
       {/* Hero Section */}
       <header className="relative bg-green-600 text-white py-16 md:py-24 lg:py-32">
-        <div className="absolute inset-0 bg-cover bg-center opacity-50" style={{ backgroundImage: "url('/path-to-your-image.jpg')" }} />
+        <div className="absolute inset-0 bg-cover bg-center opacity-50" />
         <div className="absolute inset-0 bg-gradient-to-b from-green-700 via-green-600 to-green-500 opacity-80" />
         <div className="container mx-auto relative z-10 text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4 tracking-wide">
