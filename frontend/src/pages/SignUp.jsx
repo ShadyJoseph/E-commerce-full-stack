@@ -102,7 +102,7 @@ const SignUp = () => {
   });
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-homeBackgroundColor">
+    <div className="flex items-center justify-center min-h-screen bg-green-100">
       <div className="bg-white p-8 rounded shadow-md w-96">
         <h2 className="text-2xl font-bold mb-6">Sign Up</h2>
 

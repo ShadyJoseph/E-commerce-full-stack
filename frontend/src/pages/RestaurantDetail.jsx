@@ -65,13 +65,17 @@ const restaurants = [
     ],
   },
 ];
+const discountPercentage = 20; 
 
 const RestaurantDetail = () => {
   const { id } = useParams();
   const restaurant = restaurants.find((r) => r.id === parseInt(id));
   const { addToCart } = useCart();
   const [reviewText, setReviewText] = useState('');
+  const [allergyText, setAllergyText] = useState(''); // State for allergies
+  const [savedAllergies, setSavedAllergies] = useState(''); // State for saved allergies
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [notification, setNotification] = useState('');
 
   if (!restaurant) {
     return <div className="text-center">Restaurant not found.</div>;
@@ -89,6 +93,18 @@ const RestaurantDetail = () => {
     }
   };
 
+  const handleAddToCart = (item) => {
+    const discountedPrice = item.price - (item.price * (discountPercentage / 100));
+    addToCart({ id: item.id, name: item.name, price: discountedPrice, allergies: savedAllergies });
+    setNotification(`Added ${item.name} to cart with a discount of ${discountPercentage}%.`);
+    setTimeout(() => setNotification(''), 1000);
+  };
+
+  const handleSaveAllergies = () => {
+    setSavedAllergies(allergyText);
+    setAllergyText('');
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen mt-16 p-6">
       <div className="container mx-auto bg-white rounded-lg shadow-lg p-8">
@@ -101,19 +117,56 @@ const RestaurantDetail = () => {
         </div>
         <p className="text-gray-700 mb-4">{restaurant.description}</p>
 
+        {notification && (
+          <div className="mb-6 p-4 bg-green-100 text-green-800 rounded-md text-lg font-semibold text-center animate-fade-in">
+            {notification}
+          </div>
+        )}
+
+        {/* Allergy Input Section */}
+        <div className="mt-4">
+          <h3 className="font-semibold mb-2">Any Allergies:</h3>
+          <textarea
+            value={allergyText}
+            onChange={(e) => setAllergyText(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-lg mb-2"
+            placeholder="Please list any allergies..."
+          />
+          <button
+            onClick={handleSaveAllergies}
+            className="bg-green-600 text-white py-2 px-4 rounded-full shadow-lg hover:bg-blue-700 transition duration-300 mb-4"
+          >
+            Save Allergies
+          </button>
+        </div>
+
+        {savedAllergies && (
+          <div className="p-4 bg-yellow-100 text-yellow-800 rounded-md mb-4">
+            <h4 className="font-semibold">Allergies to Consider:</h4>
+            <p>{savedAllergies}</p>
+          </div>
+        )}
+
         <h3 className="font-semibold mb-2">Available Items:</h3>
         <ul className="list-disc pl-5 mb-4">
-          {restaurant.items.map((item) => (
-            <li key={item.id} className="text-gray-700 flex justify-between items-center">
-              <span>{item.name} - ${item.price.toFixed(2)}</span>
-              <button
-                onClick={() => addToCart({ id: item.id, name: item.name, price: item.price })}
-                className="bg-green-600 text-white py-1 px-3 rounded-full shadow-lg hover:bg-green-700 transition duration-300 mb-2"
-              >
-                Add to Cart
-              </button>
-            </li>
-          ))}
+          {restaurant.items.map((item) => {
+            const discountedPrice = item.price - (item.price * (discountPercentage / 100));
+            return (
+              <li key={item.id} className="text-gray-700 flex justify-between items-center">
+                <span>
+                  {item.name} - 
+                  <span className="line-through text-red-500">${item.price.toFixed(2)}</span> 
+                  <span className="ml-2 text-green-600 font-bold">${discountedPrice.toFixed(2)} (after {discountPercentage}% discount)</span>
+                </span>
+                <button
+                  onClick={() => handleAddToCart(item)}
+                  className="bg-green-600 text-white py-1 px-3 rounded-full shadow-lg hover:bg-green-700 transition duration-300 mb-2"
+                >
+                  Add to Cart
+                </button>
+              </li>
+            );
+          })}
         </ul>
 
         <div className="mt-6">

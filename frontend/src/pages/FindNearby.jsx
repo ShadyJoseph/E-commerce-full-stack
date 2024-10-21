@@ -25,9 +25,9 @@ const FindNearbyRestaurants = () => {
         // Simulate a delay before navigating
         setTimeout(() => {
           navigate('/restaurants'); // Navigate to the restaurants page
-        }, 1500); // Delay before navigation
-      }, 2000); // Simulated fetch delay
-    }, 2000); // Simulated location retrieval delay
+        }, 500); // Delay before navigation
+      }, 1000); // Simulated fetch delay
+    }, 1000); // Simulated location retrieval delay
   };
 
   return (
