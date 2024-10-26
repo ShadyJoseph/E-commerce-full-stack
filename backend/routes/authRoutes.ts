@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import {
-  googleAuth,
   googleCallback,
   logout,
   userLogin,
   userSignUp,
 } from '../controllers/authController';
+import { googleAuth } from '../utils/findOrCreateGoogleUser';
 import {
   isAuthenticated
 } from '../middlewares/authValidation';

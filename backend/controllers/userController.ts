@@ -74,12 +74,12 @@ export const viewCart = async (req: Request, res: Response) => {
           _id: product._id,
           name: product.name,
           price: product.price,
-          imageUrls: product.imageUrls, // Display product images
-          category: product.category, // Add category if needed
+          imageUrls: product.imageUrls,
+          category: product.category,
         },
-        size: cartItem.size, // The size selected by the user
-        quantity: cartItem.quantity, // Quantity added to the cart
-        _id: cartItem._id // The cart item ID
+        size: cartItem.size, 
+        quantity: cartItem.quantity, 
+        _id: cartItem._id 
       };
     }).filter(item => item !== null); // Remove any null cart items
 
@@ -94,7 +94,7 @@ export const viewCart = async (req: Request, res: Response) => {
 
 export const addToCart = async (req: Request, res: Response) => {
   try {
-    const { productId, color, size, quantity } = req.body; // Extract product details from request body
+    const { productId, color, size, quantity } = req.body; 
     const user = await User.findById(req.user?._id);
 
     if (!user) {
@@ -141,7 +141,7 @@ export const addToCart = async (req: Request, res: Response) => {
     await productDoc.reduceStock(color, size, quantity);
 
     // Add the product to the user's cart
-    await user.addToCart(productId, size, quantity); // Ensure the method is awaited
+    await user.addToCart(productId, size, quantity); 
     await user.save();
 
     logger.info(`Item added to cart for user ID: ${req.user?._id}`, { productId, size, quantity });
@@ -164,9 +164,9 @@ export const removeFromCart = async (req: Request, res: Response) => {
       return res.status(404).json(new ErrorResponse('User or cart not found', 404));
     }
 
-    const productObjectId = new mongoose.Types.ObjectId(productId); // Convert productId to ObjectId
+    const productObjectId = new mongoose.Types.ObjectId(productId);
 
-    user.removeFromCart(productObjectId, size); // Pass the ObjectId
+    user.removeFromCart(productObjectId, size); 
     await user.save();
 
     logger.info(`Item removed from cart for user ID: ${req.user?._id}`, { productId, size });
@@ -191,7 +191,7 @@ export const addAddress = async (req: Request, res: Response) => {
     }
 
     if (!user.addresses) {
-      user.addresses = []; // Ensure addresses is initialized
+      user.addresses = []; 
     }
 
     user.addresses.push(address);

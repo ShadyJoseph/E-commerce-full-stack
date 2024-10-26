@@ -100,7 +100,7 @@ UserSchema.methods.comparePassword = async function (password: string): Promise<
   }
   return await bcrypt.compare(password, this.password || '');
 };
- 
+
 // Method to add an address
 UserSchema.methods.addAddress = async function (address: Address): Promise<void> {
   this.addresses?.push(address);
@@ -125,7 +125,6 @@ UserSchema.methods.addToCart = async function (productId: mongoose.Types.ObjectI
   // Make sure to save changes to the database
   await this.save();
 };
-
 
 // Method to remove an item from the cart
 UserSchema.methods.removeFromCart = async function (productId: mongoose.Types.ObjectId, size: string): Promise<void> {
