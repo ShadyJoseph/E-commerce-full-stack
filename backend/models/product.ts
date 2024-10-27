@@ -2,11 +2,12 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 // Define an enum for product categories
 export enum ProductCategory {
-  Swimwear = 'swimwear',
-  Accessories = 'accessories',
-  Men = 'men',
-  Women = 'women',
   Kids = 'kids',
+  Denim = 'denim',        
+  Hoodies = 'hoodies',     
+  TShirts = 't-shirts',    
+  Shorts = 'shorts',       
+  Jackets = 'jackets' 
 }
 
 // Define an interface for size and color segments
@@ -27,6 +28,10 @@ export interface IProduct extends Document {
   price: number;
   imageUrls: string[];
   category: ProductCategory;
+  rating?: number | null; // Allow null
+  discount: number;        // Must be a number
+  season?: string; 
+  gender?: 'men' | 'women' | 'unisex'; // 'unisex' is the default
   colors: IColor[];
   totalStock: number;
   createdAt: Date;
@@ -42,6 +47,10 @@ const productSchema: Schema<IProduct> = new mongoose.Schema(
     price: { type: Number, required: true, min: 0 },
     imageUrls: { type: [String], required: true },
     category: { type: String, enum: Object.values(ProductCategory), required: true, trim: true },
+    rating: { type: Number, default: null },
+    discount: { type: Number, default: 0, min: 0, max: 100 }, 
+    season: { type: String },
+    gender: { type: String, enum: ['men', 'women', 'unisex'], default: 'unisex' }, 
     colors: [
       {
         color: { type: String, required: true, trim: true },
