@@ -30,6 +30,7 @@ interface Address {
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   googleId?: string;
+  provider?: string;
   displayName: string;
   email: string;
   password?: string;
@@ -50,6 +51,7 @@ export interface IUser extends Document {
 const UserSchema: Schema<IUser> = new Schema(
   {
     googleId: { type: String },
+    provider:{type : String},
     displayName: { type: String, required: [true, 'Display name is required'] },
     email: {
       type: String,

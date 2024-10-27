@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import axios from 'axios';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import logger from '../utils/logger';
@@ -125,7 +126,6 @@ const blacklistJwtToken = (token: string) => {
     logger.warn('Could not decode JWT expiration time.');
   }
 };
-
 // Helper function to handle JWT-based logout
 const handleJwtLogout = (req: Request, res: Response, userEmail?: string, userDisplayName?: string) => {
   const token = req.headers.authorization?.split(' ')[1];
@@ -141,28 +141,41 @@ const handleJwtLogout = (req: Request, res: Response, userEmail?: string, userDi
   return res.status(200).json({ message: 'Logged out successfully' });
 };
 
-// Helper function to handle session-based logout
-const handleSessionLogout = (req: Request, res: Response, userEmail?: string, userDisplayName?: string) => {
+const handleSessionLogout = async (req: Request, res: Response, userEmail?: string, userDisplayName?: string) => {
   if (!req.isAuthenticated()) {
     logger.warn('Unauthorized logout attempt.');
     return res.status(401).json({ message: 'You must be logged in to log out' });
   }
 
-  req.logout((err) => {
+  req.logout(async (err) => {
     if (err) {
       logger.error(`Logout error: ${err.message}`);
       return res.status(500).json({ message: 'Logout error' });
     }
 
     if (req.session) {
-      req.session.destroy((destroyErr) => {
+      req.session.destroy(async (destroyErr) => {
         if (destroyErr) {
           logger.error(`Session destroy error: ${destroyErr.message}`);
           return res.status(500).json({ message: 'Error clearing session' });
         }
 
-        logger.info(`User ${userEmail || userDisplayName} logged out successfully`);
-        res.clearCookie('connect.sid'); // Clear session cookie
+        logger.info(`User ${userEmail || userDisplayName} session successfully destroyed in MongoDB`);
+
+        // Clear session cookie
+        res.clearCookie('connect.sid');
+
+        // Optional: Clear Google session cookies
+        if (req.user && req.user.provider === 'google') {
+          logger.info(`Attempting to clear Google session cookies for user: ${userEmail || userDisplayName}`);
+          try {
+            await axios.get('https://accounts.google.com/logout');
+            logger.info(`Google session cleared for user: ${userEmail || userDisplayName}`);
+          } catch (googleLogoutErr : any) {
+            logger.warn(`Google logout endpoint could not be reached: ${googleLogoutErr.message}`);
+          }
+        }
+
         return res.status(200).json({ message: 'Logged out successfully' });
       });
     } else {
@@ -173,13 +186,20 @@ const handleSessionLogout = (req: Request, res: Response, userEmail?: string, us
 };
 
 // Main logout controller
-export const logout = (req: Request, res: Response, next: NextFunction) => {
-  const user = req.user as { email?: string; displayName?: string };
+export const logout = async (req: Request, res: Response, next: NextFunction) => {
+  const user = req.user as { email?: string; displayName?: string; provider?: string };
   const token = req.headers.authorization?.split(' ')[1];
 
-  if (token) {
-    return handleJwtLogout(req, res, user?.email, user?.displayName);
-  } else {
-    return handleSessionLogout(req, res, user?.email, user?.displayName);
+  try {
+    if (token) {
+      logger.info('JWT logout initiated');
+      return handleJwtLogout(req, res, user?.email, user?.displayName);
+    } else {
+      logger.info('Session-based logout initiated');
+      return await handleSessionLogout(req, res, user?.email, user?.displayName);
+    }
+  } catch (error: any) {
+    logger.error(`Logout error for user ${user?.email || user?.displayName}: ${error.message}`);
+    return res.status(500).json({ message: 'Unexpected logout error' });
   }
 };
