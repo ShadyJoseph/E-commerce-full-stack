@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import validator from 'validator';
+import Product from './product';
 
 // Define an enum for user roles
 export enum UserRole {
@@ -13,6 +14,7 @@ interface CartItem {
   product: mongoose.Types.ObjectId;
   size: string;
   quantity: number;
+  price: number;
 }
 
 // Define Address Interface
@@ -83,6 +85,7 @@ const UserSchema: Schema<IUser> = new Schema(
         product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
         size: { type: String, required: true },
         quantity: { type: Number, required: true, min: 1 },
+        price: { type: Number, required: true }  // New field for discounted price
       },
     ],
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
@@ -107,9 +110,14 @@ UserSchema.methods.addAddress = async function (address: Address): Promise<void>
   await this.save();
 };
 
-// Method to add an item to the cart
-// Method to add an item to the cart
 UserSchema.methods.addToCart = async function (productId: mongoose.Types.ObjectId, size: string, quantity: number): Promise<void> {
+  const product = await Product.findById(productId).lean();
+  if (!product) {
+    throw new Error('Product not found');
+  }
+
+  const discountedPrice = product.price * (1 - product.discount / 100);
+
   const itemIndex = this.cart?.findIndex(
     (item: CartItem) => item.product.toString() === productId.toString() && item.size === size
   ) ?? -1;
@@ -118,8 +126,13 @@ UserSchema.methods.addToCart = async function (productId: mongoose.Types.ObjectI
     // Update quantity if the item is already in the cart
     this.cart![itemIndex].quantity += quantity;
   } else {
-    // Add new item to the cart
-    this.cart?.push({ product: productId, size, quantity });
+    // Add new item to the cart with the discounted price
+    this.cart?.push({
+      product: productId,
+      size,
+      quantity,
+      price: discountedPrice, // Add discounted price to the cart item
+    });
   }
 
   // Make sure to save changes to the database

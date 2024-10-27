@@ -1,8 +1,9 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import Product from '../models/product';
 import { validationResult } from 'express-validator';
 import logger from '../utils/logger';
 import ErrorResponse from '../utils/errorResponse';
+import { SortOrder } from 'mongoose';
 
 // Centralized error handler for validation results
 const handleValidationErrors = (req: Request, res: Response) => {
@@ -14,13 +15,24 @@ const handleValidationErrors = (req: Request, res: Response) => {
   return null;
 };
 
+// Helper function for async error handling
+const asyncHandler = (fn: any) => (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+
 // Create a new product (Admin only)
-export const createProduct = async (req: Request, res: Response) => {
+export const createProduct = asyncHandler(async (req: Request, res: Response) => {
   const validationError = handleValidationErrors(req, res);
   if (validationError) return validationError;
 
   try {
-    const newProduct = await Product.create(req.body);
+    const { colors } = req.body;
+    // Calculate total stock based on colors and sizes in the request
+    const totalStock = colors.reduce((total: number, color: any) => {
+      return total + color.availableSizes.reduce((sizeTotal: number, size: any) => sizeTotal + size.stock, 0);
+    }, 0);
+
+    const newProduct = await Product.create({ ...req.body, totalStock });
     logger.info(`Product created: ${newProduct.name}`);
     res.status(201).json({
       success: true,
@@ -31,18 +43,28 @@ export const createProduct = async (req: Request, res: Response) => {
     logger.error('Error creating product', { error });
     res.status(500).json(new ErrorResponse('Server error, product could not be created', 500));
   }
-};
+});
 
-// Get all products with pagination
-export const getAllProducts = async (req: Request, res: Response) => {
-  const { page = 1, limit = 10 } = req.query;
+// Get all products with filtering, sorting, and pagination
+export const getAllProducts = asyncHandler(async (req: Request, res: Response) => {
+  const { page = 1, limit = 10, sort = '-createdAt', category, gender } = req.query;
   const pageNumber = Math.max(Number(page), 1);
   const limitNumber = Math.max(Number(limit), 1);
   const skip = (pageNumber - 1) * limitNumber;
 
+  const query: any = {};
+  if (category) query.category = category;
+  if (gender) query.gender = gender;
+
   try {
-    const products = await Product.find().skip(skip).limit(limitNumber).lean();
-    const totalProducts = await Product.countDocuments();
+    const products = await Product.find(query)
+      .skip(skip)
+      .limit(limitNumber)
+      .sort(sort as string | { [key: string]: SortOrder })
+      .lean();
+
+    const totalProducts = await Product.countDocuments(query);
+    const totalPages = Math.ceil(totalProducts / limitNumber);
 
     logger.info(`Fetched ${products.length} products (Page ${pageNumber})`);
     res.json({
@@ -50,16 +72,19 @@ export const getAllProducts = async (req: Request, res: Response) => {
       total: totalProducts,
       page: pageNumber,
       limit: limitNumber,
+      totalPages,
+      nextPage: pageNumber < totalPages ? pageNumber + 1 : null,
+      prevPage: pageNumber > 1 ? pageNumber - 1 : null,
       products,
     });
   } catch (error) {
     logger.error('Error fetching products', { error });
     res.status(500).json(new ErrorResponse('Server error, unable to fetch products', 500));
   }
-};
+});
 
 // Get a single product by ID
-export const getProductById = async (req: Request, res: Response) => {
+export const getProductById = asyncHandler(async (req: Request, res: Response) => {
   try {
     const product = await Product.findById(req.params.id).lean();
     if (!product) {
@@ -71,19 +96,26 @@ export const getProductById = async (req: Request, res: Response) => {
     logger.error(`Error fetching product by ID ${req.params.id}`, { error });
     res.status(500).json(new ErrorResponse('Server error, unable to fetch product', 500));
   }
-};
+});
 
 // Update a product (Admin only)
-export const updateProduct = async (req: Request, res: Response) => {
+export const updateProduct = asyncHandler(async (req: Request, res: Response) => {
   const validationError = handleValidationErrors(req, res);
   if (validationError) return validationError;
 
   try {
-    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    }).lean();
-    
+    const { colors } = req.body;
+    // Recalculate total stock based on updated colors and sizes
+    const totalStock = colors.reduce((total: number, color: any) => {
+      return total + color.availableSizes.reduce((sizeTotal: number, size: any) => sizeTotal + size.stock, 0);
+    }, 0);
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, totalStock },
+      { new: true, runValidators: true }
+    ).lean();
+
     if (!updatedProduct) {
       logger.warn(`Product not found for update with ID: ${req.params.id}`);
       return res.status(404).json(new ErrorResponse('Product not found', 404));
@@ -99,10 +131,10 @@ export const updateProduct = async (req: Request, res: Response) => {
     logger.error(`Error updating product ID ${req.params.id}`, { error });
     res.status(500).json(new ErrorResponse('Server error, unable to update product', 500));
   }
-};
+});
 
 // Delete a product (Admin only)
-export const deleteProduct = async (req: Request, res: Response) => {
+export const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
   try {
     const deletedProduct = await Product.findByIdAndDelete(req.params.id);
     if (!deletedProduct) {
@@ -119,4 +151,4 @@ export const deleteProduct = async (req: Request, res: Response) => {
     logger.error(`Error deleting product ID ${req.params.id}`, { error });
     res.status(500).json(new ErrorResponse('Server error, unable to delete product', 500));
   }
-};
+});
