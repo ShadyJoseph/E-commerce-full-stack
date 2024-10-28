@@ -7,7 +7,7 @@ import {
   removeFromCart,
   addAddress,
 } from '../controllers/userController';
-import { verifyJWTToken,validateRequest } from '../middlewares/authValidation'; 
+import {isAuthenticated , validateRequest } from '../middlewares/authValidation'; 
 import {
   validateUpdateProfile,
   validateAddToCart,
@@ -18,15 +18,15 @@ import {
 const router = Router();
 
 // User Profile Routes
-router.get('/profile', verifyJWTToken, getProfile);
-router.put('/profile', verifyJWTToken, validateUpdateProfile, validateRequest, updateProfile);
+router.get('/profile', isAuthenticated, getProfile);
+router.put('/profile', isAuthenticated, validateUpdateProfile, validateRequest, updateProfile);
 
 // Cart Management
-router.get('/cart', verifyJWTToken, viewCart);
-router.post('/cart', verifyJWTToken, validateAddToCart, validateRequest, addToCart);
-router.delete('/cart/:productId/:size', verifyJWTToken, validateRemoveFromCart, validateRequest, removeFromCart);
+router.get('/cart', isAuthenticated, viewCart);
+router.post('/cart', isAuthenticated, validateAddToCart, validateRequest, addToCart);
+router.delete('/cart/:productId/:size', isAuthenticated, validateRemoveFromCart, validateRequest, removeFromCart);
 
 // Address Management
-router.post('/address', verifyJWTToken, validateAddAddress, validateRequest, addAddress);
+router.post('/address', isAuthenticated, validateAddAddress, validateRequest, addAddress);
 
 export default router;

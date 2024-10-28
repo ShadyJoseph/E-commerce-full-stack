@@ -26,6 +26,13 @@ passport.deserializeUser(async (id: string, done: (err: any, user?: Express.User
   }
 });
 
+// Google Profile Interface
+interface GoogleProfile {
+  id: string;
+  displayName: string;
+  emails?: { value: string }[];
+}
+
 // Google OAuth Strategy
 passport.use(
   new GoogleStrategy(
@@ -36,7 +43,7 @@ passport.use(
       accessType: 'offline', // To get refresh token
       prompt: 'consent', // Forces consent screen every time
     } as StrategyOptions,
-    async (accessToken: string, refreshToken: string, profile: any, done: (error: any, user?: IUser | false) => void) => {
+    async (accessToken: string, refreshToken: string, profile: GoogleProfile, done: (error: any, user?: IUser | false) => void) => {
       try {
         const existingUser = await User.findOne({ googleId: profile.id }) as IUser;
 
@@ -50,10 +57,16 @@ passport.use(
           return done(null, existingUser);
         }
 
+        const email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : undefined;
+        if (!email) {
+          logger.error(`No email found for Google user: ${profile.id}`);
+          return done(new Error('Email not provided by Google'), false);
+        }
+
         const newUser: IUser = new User({
           googleId: profile.id,
           displayName: profile.displayName,
-          email: profile.emails ? profile.emails[0].value : undefined,
+          email: email,
           refreshToken, // Save refresh token for new user
         });
         

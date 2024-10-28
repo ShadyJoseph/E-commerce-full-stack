@@ -1,76 +1,55 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import logger from '../utils/logger';
-import User, { IUser } from '../models/user';
+import User, { UserRole,IUser } from '../models/user';
 import { body, validationResult } from 'express-validator';
 import { isTokenBlacklisted } from '../utils/blacklistToken';
 
-// Utility function for logging
-const logAuthAttempt = (req: Request, user: IUser | null, isSuccess: boolean) => {
-  const userIdentifier = user ? user.email || user.displayName : 'unknown';
-  const status = isSuccess ? 'granted' : 'denied';
-  logger.info(`Authentication ${status} for user ${userIdentifier} at ${req.originalUrl}`);
-};
-
-// Middleware to check if user is authenticated
 export const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
   if (req.isAuthenticated() && req.user) {
-    logAuthAttempt(req, req.user as IUser, true);
     return next();
-  } else {
-    logger.warn('Session-based authentication failed. Checking JWT...');
   }
 
   const token = req.headers.authorization?.split(' ')[1];
   if (token) {
-    logger.info('JWT token found. Proceeding with JWT authentication.');
     return verifyJWTToken(req, res, next);
-  } else {
-    logger.warn('No JWT token found in request.');
   }
 
-  logger.warn(`Unauthorized access attempt to ${req.originalUrl}`);
   return res.status(401).json({ message: 'You must be logged in to access this route' });
 };
-// Middleware to verify JWT token
-export const verifyJWTToken = async (req: Request, res: Response, next: NextFunction) => {
+
+// Middleware: Verify JWT Token
+ const verifyJWTToken = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.split(' ')[1];
 
-  // Check if token is provided
   if (!token) {
     logger.warn(`No token provided for request to ${req.originalUrl}`);
     return res.status(401).json({ message: 'Access denied. No token provided.' });
   }
 
-  // Check if token is blacklisted
   if (isTokenBlacklisted(token)) {
     logger.warn(`Blacklisted token used to access ${req.originalUrl}`);
     return res.status(401).json({ message: 'Token has been invalidated. Please log in again.' });
   }
 
   try {
-    // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
     logger.info(`Decoded JWT token: ${JSON.stringify(decoded)}`);
 
-    // Find the user by ID from the decoded token
     const user = await User.findById(decoded.userId);
     if (!user) {
       logger.warn(`Invalid token used to access ${req.originalUrl}`);
       return res.status(401).json({ message: 'Invalid token' });
     }
 
-    // Attach the user to the request object for further processing
     req.user = user;
-    logAuthAttempt(req, user, true); // Log successful authentication
     next();
   } catch (error) {
-    // Handle token-related errors
     handleTokenError(res, error, req.originalUrl);
   }
 };
 
-// Error handling for token verification
+// Error Handling for Token Verification
 const handleTokenError = (res: Response, error: any, url: string) => {
   if (error instanceof jwt.TokenExpiredError) {
     logger.warn(`Expired JWT token used to access ${url}`);
@@ -81,29 +60,15 @@ const handleTokenError = (res: Response, error: any, url: string) => {
   return res.status(401).json({ message: 'Invalid token' });
 };
 
-
-// Middleware to check if user is admin
+// Middleware: Check Admin Role
 export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as IUser;
-  if (user && user.role === 'admin') {
-    logAuthAttempt(req, user, true);
+  if (user && user.role === UserRole.Admin) {
     return next();
   }
 
   logger.warn(`Admin access denied to user ${user?.email || 'unknown'} at ${req.originalUrl}`);
   return res.status(403).json({ message: 'You do not have permission to access this route' });
-};
-
-// Unified middleware to require authentication
-export const requireAuthentication = (req: Request, res: Response, next: NextFunction) => {
-  if (req.isAuthenticated()) {
-    return isAuthenticated(req, res, next);
-  }
-  const token = req.headers.authorization?.split(' ')[1];
-  if (token) {
-    return verifyJWTToken(req, res, next);
-  }
-  return res.status(401).json({ message: 'Authentication required' });
 };
 
 export const validateUserSignUp = [

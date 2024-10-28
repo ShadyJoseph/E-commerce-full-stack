@@ -1,14 +1,14 @@
 import logger from '../utils/logger';
-import User, { IUser } from '../models/user';
+import User, { IUser, Address, UserRole} from '../models/user';
 import bcrypt from 'bcryptjs';
 
 export const createUserIfNotExists = async (
     email: string,
     password: string,
     displayName: string,
-    addresses: any[] = []
+    addresses: Address[] = []
 ): Promise<IUser | null> => {
-    const existingUser = await User.findOne({ email }) as IUser | null;
+    const existingUser = await User.findOne({ email });
     if (existingUser) return null;
 
     const hashedPassword = await hashPassword(password);
@@ -17,14 +17,20 @@ export const createUserIfNotExists = async (
         password: hashedPassword,
         displayName,
         addresses,
-        role: 'user'
-    }) as IUser;
+        role: UserRole.User,
+  
+    });
 
-    await newUser.save();
-    logger.info(`New user ${email} created successfully`);
-    return newUser;
+    try {
+      await newUser.save();
+      logger.info(`New user created: ${email}`);
+      return newUser;
+    } catch (error) {
+      logger.error(`Error creating user: ${(error as Error).message}`);
+      throw error;
+    }
 };
-
 const hashPassword = async (password: string): Promise<string> => {
     return await bcrypt.hash(password, 10);
 };
+
