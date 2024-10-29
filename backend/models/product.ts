@@ -135,7 +135,6 @@ productSchema.virtual('discountedPrice').get(function (this: IProduct) {
   return this.price * (1 - this.discount / 100);
 });
 
-
 // Create the Product model
 const Product = mongoose.model<IProduct>('Product', productSchema);
 

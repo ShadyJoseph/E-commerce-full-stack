@@ -1,19 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import Product from '../models/product';
-import { validationResult } from 'express-validator';
 import logger from '../utils/logger';
 import ErrorResponse from '../utils/errorResponse';
 import { SortOrder } from 'mongoose';
-
-// Centralized error handler for validation results
-const handleValidationErrors = (req: Request, res: Response) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    logger.warn(`Validation failed: ${JSON.stringify(errors.array())}`);
-    return res.status(400).json({ success: false, errors: errors.array() });
-  }
-  return null;
-};
 
 // Helper function for async error handling
 const asyncHandler = (fn: any) => (req: Request, res: Response, next: NextFunction) => {
@@ -22,17 +11,8 @@ const asyncHandler = (fn: any) => (req: Request, res: Response, next: NextFuncti
 
 // Create a new product (Admin only)
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {
-  const validationError = handleValidationErrors(req, res);
-  if (validationError) return validationError;
-
   try {
-    const { colors } = req.body;
-    // Calculate total stock based on colors and sizes in the request
-    const totalStock = colors.reduce((total: number, color: any) => {
-      return total + color.availableSizes.reduce((sizeTotal: number, size: any) => sizeTotal + size.stock, 0);
-    }, 0);
-
-    const newProduct = await Product.create({ ...req.body, totalStock });
+    const newProduct = await Product.create(req.body);
     logger.info(`Product created: ${newProduct.name}`);
     res.status(201).json({
       success: true,
@@ -100,19 +80,10 @@ export const getProductById = asyncHandler(async (req: Request, res: Response) =
 
 // Update a product (Admin only)
 export const updateProduct = asyncHandler(async (req: Request, res: Response) => {
-  const validationError = handleValidationErrors(req, res);
-  if (validationError) return validationError;
-
   try {
-    const { colors } = req.body;
-    // Recalculate total stock based on updated colors and sizes
-    const totalStock = colors.reduce((total: number, color: any) => {
-      return total + color.availableSizes.reduce((sizeTotal: number, size: any) => sizeTotal + size.stock, 0);
-    }, 0);
-
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, totalStock },
+      req.body,
       { new: true, runValidators: true }
     ).lean();
 

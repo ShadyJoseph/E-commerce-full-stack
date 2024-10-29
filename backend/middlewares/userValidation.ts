@@ -36,7 +36,7 @@ export const validateAddToCart = [
     .escape(),
 
   body('quantity')
-    .optional()
+    .exists().withMessage('Quantity is required') // Ensure quantity is required
     .isInt({ gt: 0 }).withMessage('Quantity must be a positive integer')
     .toInt(),
 ];

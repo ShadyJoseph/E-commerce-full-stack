@@ -152,7 +152,6 @@ export const addToCart = async (req: Request, res: Response) => {
   }
 };
 
-
 // Remove item from cart
 export const removeFromCart = async (req: Request, res: Response) => {
   try {
