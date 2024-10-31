@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import Product from '../models/product';
 import ErrorResponse from '../utils/errorResponse';
 
- // Validate productId and fetch the product document.
+// Validate productId and fetch the product document.
 export const validateAndFetchProduct = async (productId: string) => {
   if (!mongoose.Types.ObjectId.isValid(productId)) {
     throw new ErrorResponse('Invalid product ID', 400);

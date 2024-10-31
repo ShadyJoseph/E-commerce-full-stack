@@ -1,15 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import logger from '../utils/logger';
-import { handleServerError } from '../utils/handleServerError';
-import { generateToken } from '../utils/generateToken';
-import { verifyUserCredentials } from '../utils/UserCredentials';
-import { createUserIfNotExists } from '../utils/createUserIfNotExists';
-import { findUserByGoogleId } from '../utils/findUserByGoogleId';
-import { createGoogleUser } from '../utils/createGoogleUser';
+import handleServerError from '../utils/handleServerError';
+import generateToken from '../utils/generateToken';
+import verifyUserCredentials from '../utils/UserCredentials';
+import createUserIfNotExists from '../utils/createUserIfNotExists';
+import findUserByGoogleId from '../utils/findUserByGoogleId';
+import createGoogleUser from '../utils/createGoogleUser';
 import { IUser } from '../models/user';
-import { handleSessionLogout } from '../utils/handleSessionLogout';
-import { handleJwtLogout } from '../utils/handleJwtLogout'
+import handleSessionLogout from '../utils/handleSessionLogout';
+import handleJwtLogout from '../utils/handleJwtLogout'
 
 export const googleCallback = (req: Request, res: Response, next: NextFunction) => {
   passport.authenticate('google', { failureRedirect: '/api/auth/login', session: true })(

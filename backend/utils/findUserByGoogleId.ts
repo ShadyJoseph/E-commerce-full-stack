@@ -1,7 +1,7 @@
 import logger from '../utils/logger';
-import User, { IUser} from '../models/user';
+import User, { IUser } from '../models/user';
 
-export const findUserByGoogleId = async (googleId: string): Promise<IUser | null> => {
+const findUserByGoogleId = async (googleId: string): Promise<IUser | null> => {
   const existingUser = await User.findOne({ googleId });
   if (existingUser) {
     logger.info(`Existing Google user found: ${existingUser.email}`);
@@ -9,3 +9,5 @@ export const findUserByGoogleId = async (googleId: string): Promise<IUser | null
   }
   return null;
 };
+
+export default findUserByGoogleId

@@ -5,7 +5,7 @@ import {
   userLogin,
   userSignUp,
 } from '../controllers/authController';
-import { googleAuth } from '../utils/googleAuth';
+import  googleAuth  from '../utils/googleAuth';
 import {isAuthenticated} from '../middlewares/authValidation';
 import {
   validateUserSignUp,

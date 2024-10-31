@@ -173,8 +173,6 @@ UserSchema.methods.removeFromCart = async function (
   return true; // Item quantity reduced or removed
 };
 
-
-
 // Export the User model
 const User = mongoose.model<IUser>('User', UserSchema);
 export default User;

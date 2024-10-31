@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 
-export const handleSessionLogout = async (req: Request, res: Response) => {
+const handleSessionLogout = async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: 'You must be logged in to log out' });
     }
@@ -18,3 +18,4 @@ export const handleSessionLogout = async (req: Request, res: Response) => {
     });
   };
 
+export default handleSessionLogout

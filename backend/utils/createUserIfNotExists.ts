@@ -2,7 +2,7 @@ import logger from '../utils/logger';
 import User, { IUser, Address, UserRole} from '../models/user';
 import hashPassword from './hashPassword';
 
-export const createUserIfNotExists = async (
+ const createUserIfNotExists = async (
     email: string,
     password: string,
     displayName: string,
@@ -31,3 +31,4 @@ export const createUserIfNotExists = async (
     }
 };
 
+export default createUserIfNotExists

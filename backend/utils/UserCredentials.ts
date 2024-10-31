@@ -3,7 +3,7 @@ import { IUser } from '../models/user';
 import logger from './logger';
 
 // Verifies user credentials by email and password
-export const verifyUserCredentials = async (
+const verifyUserCredentials = async (
   email: string,
   password: string
 ): Promise<IUser | null> => {
@@ -25,3 +25,5 @@ export const verifyUserCredentials = async (
 
   return user;
 };
+
+export default verifyUserCredentials
