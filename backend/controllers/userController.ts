@@ -67,7 +67,7 @@ export const viewCart = async (req: Request, res: Response) => {
       return res.status(404).json(new ErrorResponse('User or cart not found', 404));
     }
 
-    // Create a simplified version of the cart with only necessary details
+    // Create a cart 
     const cart = user.cart.map((cartItem: any) => {
       const product = cartItem.product;
       if (!product) return null;
