@@ -30,8 +30,4 @@ router.get('/dashboard', isAuthenticated, (req, res) => {
   res.json({ message: `Welcome ${username}` });
 });
 
-router.get('/makeSure',isAuthenticated,(req,res)=>{
-  console.log("you are in")
-})
-
 export default router;

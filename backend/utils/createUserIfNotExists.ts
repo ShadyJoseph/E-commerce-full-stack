@@ -1,6 +1,6 @@
 import logger from '../utils/logger';
 import User, { IUser, Address, UserRole} from '../models/user';
-import bcrypt from 'bcryptjs';
+import hashPassword from './hashPassword';
 
 export const createUserIfNotExists = async (
     email: string,
@@ -29,8 +29,5 @@ export const createUserIfNotExists = async (
       logger.error(`Error creating user: ${(error as Error).message}`);
       throw error;
     }
-};
-const hashPassword = async (password: string): Promise<string> => {
-    return await bcrypt.hash(password, 10);
 };
 

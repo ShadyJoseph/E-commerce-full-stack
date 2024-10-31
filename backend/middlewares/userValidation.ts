@@ -29,6 +29,12 @@ export const validateAddToCart = [
     .exists().withMessage('Product ID is required')
     .isMongoId().withMessage('Product ID must be a valid MongoDB ObjectId'),
 
+  body('color')
+    .optional()
+    .isString().withMessage('Color must be a string')
+    .trim()
+    .escape(),
+
   body('size')
     .exists().withMessage('Size is required')
     .isString().withMessage('Size must be a string')
@@ -79,8 +85,7 @@ export const validateAddAddress = [
     .exists().withMessage('Postal code is required')
     .isString().withMessage('Postal code must be a string')
     .trim()
-    .escape()
-    .isPostalCode('any').withMessage('Postal code must be valid'),
+    .escape(),
 
   body('country')
     .exists().withMessage('Country is required')

@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import mongoose from 'mongoose'; 
-import User from '../models/user'; 
-import logger from '../utils/logger'; 
+import mongoose from 'mongoose';
+import User from '../models/user';
+import logger from '../utils/logger';
 import ErrorResponse from '../utils/errorResponse';
-import bcrypt from 'bcryptjs';
-import Product from '../models/product';
+import hashPassword from '../utils/hashPassword';
+import { validateProductStock, validateAndFetchProduct } from '../utils/cartUtils';
 // Get user profile
 export const getProfile = (req: Request, res: Response) => {
   try {
@@ -13,7 +13,7 @@ export const getProfile = (req: Request, res: Response) => {
       logger.warn(`Profile not found for user ID: ${req.user?._id}`);
       return res.status(404).json(new ErrorResponse('Profile not found', 404));
     }
-    
+
     logger.info(`Profile retrieved for user ID: ${req.user?._id}`);
     res.json({ success: true, user: userProfile });
   } catch (error) {
@@ -22,31 +22,35 @@ export const getProfile = (req: Request, res: Response) => {
   }
 };
 
-
-// Update user profile
+// Update user profile controller
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const userId = req.user?._id;
-    const updatedData = { ...req.body };
+    const { password, ...otherData } = req.body;
 
-    // Check if password is being updated, if so, hash it
-    if (updatedData.password) {
-      logger.info(`Updating password for user: ${userId}`);
-      updatedData.password = await bcrypt.hash(updatedData.password, 12);
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(userId, updatedData, {
-      new: true,
-      runValidators: true,
-    }).lean();
-
-    if (!updatedUser) {
+    // Fetch user
+    const user = await User.findById(userId);
+    if (!user) {
       logger.warn(`User not found during profile update: ${userId}`);
       return res.status(404).json(new ErrorResponse('User not found', 404));
     }
 
-    logger.info(`User profile updated: ${updatedUser.email}`);
-    res.json({ success: true, message: 'Profile updated', user: updatedUser });
+    // If password is being updated, hash it
+    if (password) {
+      logger.info(`Updating password for user: ${userId}`);
+      user.password = await hashPassword(password);
+    }
+
+    // Update other fields
+    for (const [key, value] of Object.entries(otherData)) {
+      user.set(key, value);
+    }
+
+    // Save changes
+    await user.save();
+
+    logger.info(`User profile updated: ${user.email}`);
+    res.json({ success: true, message: 'Profile updated', user: user.toObject() });
   } catch (error) {
     logger.error(`Error updating user profile for ID ${req.user?._id}`, { error });
     res.status(500).json(new ErrorResponse('Server error', 500));
@@ -77,9 +81,9 @@ export const viewCart = async (req: Request, res: Response) => {
           imageUrls: product.imageUrls,
           category: product.category,
         },
-        size: cartItem.size, 
-        quantity: cartItem.quantity, 
-        _id: cartItem._id 
+        size: cartItem.size,
+        quantity: cartItem.quantity,
+        _id: cartItem._id
       };
     }).filter(item => item !== null); // Remove any null cart items
 
@@ -91,87 +95,67 @@ export const viewCart = async (req: Request, res: Response) => {
   }
 };
 
-
 export const addToCart = async (req: Request, res: Response) => {
   try {
-    const { productId, color, size, quantity } = req.body; 
-    const user = await User.findById(req.user?._id);
+    const { productId, color, size, quantity } = req.body;
 
+    // Fetch user document
+    const user = await User.findById(req.user?._id);
     if (!user) {
-      logger.warn(`User not found for adding to cart: ${req.user?._id}`);
+      logger.warn(`User not found: ${req.user?._id}`);
       return res.status(404).json(new ErrorResponse('User not found', 404));
     }
 
-    // Ensure the product ID is a valid MongoDB ObjectId
-    if (!mongoose.Types.ObjectId.isValid(productId)) {
-      logger.warn(`Invalid product ID: ${productId}`);
-      return res.status(400).json(new ErrorResponse('Invalid product ID', 400));
-    }
+    // Validate product and check stock availability
+    const product = await validateAndFetchProduct(productId);
+    validateProductStock(product, color, size, quantity);
 
-    // Fetch the product from the database using productId
-    const productDoc = await Product.findById(productId);
+    // Adjust stock on product and add to user's cart
+    await product.reduceStock(color, size, quantity);
+    await user.addToCart(productId, size, quantity);
 
-    if (!productDoc) {
-      logger.warn(`Product not found: ${productId}`);
-      return res.status(404).json(new ErrorResponse('Product not found', 404));
-    }
-
-    // Check if the color exists
-    const colorIndex = productDoc.colors.findIndex(c => c.color === color);
-    if (colorIndex === -1) {
-      logger.warn(`Invalid color: ${color} for product: ${productId}`);
-      return res.status(400).json(new ErrorResponse('Invalid color', 400));
-    }
-
-    // Check if the size exists within the chosen color
-    const sizeIndex = productDoc.colors[colorIndex].availableSizes.findIndex(s => s.size === size);
-    if (sizeIndex === -1) {
-      logger.warn(`Invalid size: ${size} for product: ${productId}, color: ${color}`);
-      return res.status(400).json(new ErrorResponse('Invalid size', 400));
-    }
-
-    // Check if there's enough stock for the requested quantity
-    const availableStock = productDoc.colors[colorIndex].availableSizes[sizeIndex].stock;
-    if (availableStock < quantity) {
-      logger.warn(`Insufficient stock for product: ${productId}, color: ${color}, size: ${size}`);
-      return res.status(400).json(new ErrorResponse('Insufficient stock', 400));
-    }
-
-    // Reduce stock for the product
-    await productDoc.reduceStock(color, size, quantity);
-
-    // Add the product to the user's cart
-    await user.addToCart(productId, size, quantity); 
-    await user.save();
-
-    logger.info(`Item added to cart for user ID: ${req.user?._id}`, { productId, size, quantity });
+    logger.info(`Item added to cart for user: ${req.user?._id}`);
     res.json({ success: true, message: 'Item added to cart', cart: user.cart });
   } catch (error) {
-    logger.error(`Error adding item to cart for user ID ${req.user?._id}`, { error });
-    res.status(500).json(new ErrorResponse('Server error', 500));
+    logger.error(`Error adding to cart: ${req.user?._id}`, { error });
+    const status = error instanceof ErrorResponse ? error.statusCode : 500;
+    res.status(status).json(error instanceof ErrorResponse ? error : new ErrorResponse('Server error', 500));
   }
 };
 
-// Remove item from cart
+/// Helper function to validate ObjectId
+const isValidObjectId = (id: string) => mongoose.Types.ObjectId.isValid(id);
+
 export const removeFromCart = async (req: Request, res: Response) => {
   try {
     const { productId, size } = req.params;
-    const user = await User.findById(req.user?._id);
+    let { quantity } = req.body; // Quantity to remove
 
-    if (!user || !user.cart) {
-      logger.warn(`User or cart not found for removal from cart: ${req.user?._id}`);
-      return res.status(404).json(new ErrorResponse('User or cart not found', 404));
+    // Set default quantity to 1 if not provided
+    quantity = quantity ? Number(quantity) : 1;
+
+    // Validate productId and quantity
+    if (!isValidObjectId(productId) || quantity <= 0) {
+      logger.warn(`Invalid product ID or quantity: ${productId}, quantity: ${quantity}`);
+      return res.status(400).json(new ErrorResponse('Invalid product ID or quantity', 400));
     }
 
-    const productObjectId = new mongoose.Types.ObjectId(productId);
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+      logger.warn(`User not found: ${req.user?._id}`);
+      return res.status(404).json(new ErrorResponse('User not found', 404));
+    }
 
-    user.removeFromCart(productObjectId, size); 
-    await user.save();
+    const removed = await user.removeFromCart(new mongoose.Types.ObjectId(productId), size, quantity);
+    if (!removed) {
+      logger.warn(`Item not found in cart for removal: ${productId}, size: ${size}`);
+      return res.status(404).json(new ErrorResponse('Item not found in cart', 404));
+    }
 
-    logger.info(`Item removed from cart for user ID: ${req.user?._id}`, { productId, size });
-    res.json({ success: true, message: 'Item removed from cart', cart: user.cart });
+    logger.info(`Item quantity reduced in cart for user ID: ${req.user?._id}`, { productId, size, quantity });
+    res.json({ success: true, message: 'Item quantity updated in cart', cart: user.cart });
   } catch (error) {
-    logger.error(`Error removing item from cart for user ID ${req.user?._id}`, { error });
+    logger.error(`Error updating item quantity in cart for user ID ${req.user?._id}`, { error });
     res.status(500).json(new ErrorResponse('Server error', 500));
   }
 };
@@ -190,7 +174,7 @@ export const addAddress = async (req: Request, res: Response) => {
     }
 
     if (!user.addresses) {
-      user.addresses = []; 
+      user.addresses = [];
     }
 
     user.addresses.push(address);

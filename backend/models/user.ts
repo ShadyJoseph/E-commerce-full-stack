@@ -43,7 +43,7 @@ export interface IUser extends Document {
   comparePassword(password: string): Promise<boolean>;
   addAddress(address: Address): Promise<void>;
   addToCart(productId: mongoose.Types.ObjectId, size: string, quantity: number): Promise<void>;
-  removeFromCart(productId: mongoose.Types.ObjectId, size: string): Promise<void>;
+  removeFromCart(productId: mongoose.Types.ObjectId, size: string, quantity:Number): Promise<boolean>;
 }
 
 // Define the User schema
@@ -146,12 +146,34 @@ UserSchema.methods.addToCart = async function (productId: mongoose.Types.ObjectI
   // Save changes to the database
   await this.save();
 };
+// Method to reduce quantity or remove an item from the cart if quantity is zero
+UserSchema.methods.removeFromCart = async function (
+  productId: mongoose.Types.ObjectId,
+  size: string,
+  quantity: number
+): Promise<boolean> {
+  const cartItemIndex = this.cart.findIndex(
+    (item: CartItem) => item.product.equals(productId) && item.size === size
+  );
 
-// Method to remove an item from the cart
-UserSchema.methods.removeFromCart = async function (productId: mongoose.Types.ObjectId, size: string): Promise<void> {
-  this.cart = this.cart?.filter((item: CartItem) => !(item.product.toString() === productId.toString() && item.size === size)) ?? [];
+  if (cartItemIndex === -1) {
+    return false; // Item not found in cart
+  }
+
+  // Check if current quantity is greater than the quantity to be removed
+  if (this.cart[cartItemIndex].quantity > quantity) {
+    // Reduce the quantity
+    this.cart[cartItemIndex].quantity -= quantity;
+  } else {
+    // If quantity reaches zero, remove the item
+    this.cart.splice(cartItemIndex, 1);
+  }
+
   await this.save();
+  return true; // Item quantity reduced or removed
 };
+
+
 
 // Export the User model
 const User = mongoose.model<IUser>('User', UserSchema);
