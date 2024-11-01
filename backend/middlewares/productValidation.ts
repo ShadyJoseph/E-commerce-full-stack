@@ -1,8 +1,6 @@
-import { body, validationResult } from 'express-validator';
+import { body } from 'express-validator';
 import validator from 'validator';
-import { Request, Response, NextFunction } from 'express';
 import { ProductCategory } from '../models/product';
-import logger from '../utils/logger';
 
 export const validateProduct = [
   // Name validation
@@ -87,16 +85,3 @@ export const validateProduct = [
     }),
 ];
 
-// Middleware to handle validation errors with logging
-export const validateProductRequest = (req: Request, res: Response, next: NextFunction) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    logger.warn(`Product validation failed: ${JSON.stringify(errors.array())}`);
-    return res.status(400).json({
-      status: 'error',
-      message: 'Product validation failed',
-      errors: errors.array(),
-    });
-  }
-  next();
-};

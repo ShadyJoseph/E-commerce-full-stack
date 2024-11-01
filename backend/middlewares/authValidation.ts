@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import logger from '../utils/logger';
 import User, { UserRole,IUser } from '../models/user';
-import { body, validationResult } from 'express-validator';
+import { body } from 'express-validator';
 import { isTokenBlacklisted } from '../utils/blacklistToken';
 
 export const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
@@ -104,17 +104,3 @@ export const validateUserLogin = [
     .exists().withMessage('Password is required')
     .notEmpty().withMessage('Password cannot be empty')
 ];
-
-// Middleware to handle validation errors
-export const validateRequest = (req: Request, res: Response, next: NextFunction) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    logger.warn(`Validation failed: ${JSON.stringify(errors.array())}`);
-    return res.status(400).json({
-      status: 'error',
-      message: 'Validation failed',
-      errors: errors.array()
-    });
-  }
-  next();
-};

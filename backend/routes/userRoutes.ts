@@ -7,13 +7,14 @@ import {
   removeFromCart,
   addAddress,
 } from '../controllers/userController';
-import {isAuthenticated , validateRequest } from '../middlewares/authValidation'; 
+import {isAuthenticated  } from '../middlewares/authValidation'; 
 import {
   validateUpdateProfile,
   validateAddToCart,
   validateRemoveFromCart,
   validateAddAddress
 } from '../middlewares/userValidation'; 
+import validateRequest from '../middlewares/validateRequest';
 
 const router = Router();
 
