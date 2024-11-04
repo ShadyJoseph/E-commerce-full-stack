@@ -2,6 +2,7 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only ./server.ts",
+    "build": "tsc",
     "clean": "rimraf node_modules"
   },
   "dependencies": {

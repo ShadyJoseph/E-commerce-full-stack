@@ -1,0 +1,19 @@
+# E-commerce Backend
+
+This is the backend for an E-commerce application built using Node.js, Express, and MongoDB. It provides RESTful APIs for user authentication, product management, and order processing.
+
+## Features
+- User authentication with JWT and OAuth (Google)
+- CRUD operations for products
+- Shopping cart management
+- Address handling
+- Input validation and error handling
+- Middleware for logging and security
+
+## Technologies
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- TypeScript
+- Helmet for security
