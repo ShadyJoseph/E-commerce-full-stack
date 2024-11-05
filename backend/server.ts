@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 import logger from './utils/logger';
 import errorHandler from './middlewares/error';
 import connectDB from './config/db';
