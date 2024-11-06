@@ -17,7 +17,7 @@ const Dashboard: React.FC = () => {
         setUsername(response.data.displayname);
       } catch (error) {
         console.error('Failed to fetch user data');
-        navigate('/signin');
+        navigate('/');
       }
     };
 

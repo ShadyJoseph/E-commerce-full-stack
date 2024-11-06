@@ -19,5 +19,5 @@ export const removeAuthToken = (): void => {
 export const redirectToSignIn = (): void => {
   localStorage.removeItem('user');
   removeAuthToken();
-  window.location.href = '/signin';
+  window.location.href = '/';
 };
