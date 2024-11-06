@@ -1,23 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useAuthStore } from '../stores/authStore';
 import GoogleSignInButton from '../components/GoogleSignInButton';
-import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import Loader from '../components/Loader';
 import { useThemeStore } from '../stores/themeStore';
+import InputField from '../components/InputField';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [isGoogleSigningIn, setIsGoogleSigningIn] = React.useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
 
-  // Access Zustand store actions and state
   const login = useAuthStore((state) => state.login);
   const googleLogin = useAuthStore((state) => state.googleLogin);
-
-  // Access the theme store for dark mode state
   const { darkMode } = useThemeStore((state) => state);
 
   const validationSchema = Yup.object({
@@ -27,11 +24,11 @@ const SignIn: React.FC = () => {
 
   const handleUserLogin = async (
     values: { email: string; password: string },
-    { setSubmitting, setFieldError }: any
+    { setSubmitting, setFieldError }: { setSubmitting: (isSubmitting: boolean) => void; setFieldError: (field: string, message: string) => void }
   ) => {
     try {
       const success = await login(values.email, values.password);
-      if (success) navigate('/dashboard'); // Redirect only if login was successful
+      if (success) navigate('/dashboard');
     } catch (error: any) {
       setFieldError('submit', error?.message || 'Failed to sign in');
     } finally {
@@ -45,7 +42,7 @@ const SignIn: React.FC = () => {
   };
 
   return (
-    <div className={`flex flex-col items-center justify-center min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} transition-colors`}>
+    <div className={`flex flex-col items-center justify-center min-h-screen px-4 ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100'} transition-colors`}>
       <div className={`w-full max-w-md p-8 rounded-lg shadow-lg border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'} transition-all`}>
         <h2 className={`text-3xl font-bold text-center ${darkMode ? 'text-gray-100' : 'text-gray-800'} mb-6`}>Welcome Back!</h2>
 
@@ -57,47 +54,33 @@ const SignIn: React.FC = () => {
           {({ isSubmitting, errors }) => (
             <Form className="space-y-6">
               {errors.submit && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+                <div className="animate-pulse bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
                   <strong className="font-bold">Error: </strong>
-                  <span className="block sm:inline">{errors.submit}</span>
+                  <span>{errors.submit}</span>
                 </div>
               )}
 
-              <div>
-                <label className={`block text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-600'}`}>Email:</label>
-                <Field
-                  type="email"
-                  name="email"
-                  className={`w-full px-4 py-3 mt-1 border rounded-md transition-all ${isSubmitting || isGoogleSigningIn ? 'bg-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'} ${darkMode ? 'dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100' : ''} focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400`}
-                  disabled={isSubmitting || isGoogleSigningIn}
-                />
-                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
-              </div>
+              <InputField
+                id="email"
+                label="Email:"
+                type="email"
+                disabled={isSubmitting || isGoogleSigningIn}
+              />
 
-              <div className="relative">
-                <label className={`block text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-600'}`}>Password:</label>
-                <Field
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  className={`w-full px-4 py-3 mt-1 border rounded-md transition-all ${isSubmitting || isGoogleSigningIn ? 'bg-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'} ${darkMode ? 'dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100' : ''} focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400`}
-                  disabled={isSubmitting || isGoogleSigningIn}
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-10 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={isSubmitting || isGoogleSigningIn}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
-                </button>
-                <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
-              </div>
+              <InputField
+                id="password"
+                label="Password:"
+                type="password"
+                showToggle={showPassword}
+                toggleVisibility={() => setShowPassword(!showPassword)}
+                disabled={isSubmitting || isGoogleSigningIn}
+              />
 
               <button
                 type="submit"
                 disabled={isSubmitting || isGoogleSigningIn}
-                className={`w-full px-4 py-2 text-white font-semibold rounded-md transition duration-150 ease-in-out ${isSubmitting || isGoogleSigningIn ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                className={`w-full px-4 py-2 text-white font-semibold rounded-md transition duration-150 ease-in-out ${isSubmitting || isGoogleSigningIn ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
               >
                 {isSubmitting ? <Loader height="25" width="25" aria-label="Loading..." /> : 'Sign In'}
               </button>
@@ -109,9 +92,9 @@ const SignIn: React.FC = () => {
           <GoogleSignInButton isLoading={isGoogleSigningIn} onClick={handleGoogleSignIn} mssg="Sign In With Google" />
         </div>
 
-        <div className="mt-4 text-sm text-center text-gray-600 dark:text-gray-300">
+        <div className="mt-4 text-sm text-center">
           Don't have an account?{' '}
-          <Link to="/signup" className={`text-blue-600 hover:underline ${darkMode ? 'dark:text-blue-400' : ''}`}>
+          <Link to="/signup" className="text-blue-600 hover:underline">
             Register here
           </Link>
         </div>
