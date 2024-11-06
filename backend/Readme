@@ -17,3 +17,4 @@ This is the backend for an E-commerce application built using Node.js, Express, 
 - Mongoose
 - TypeScript
 - Helmet for security
+- CORS for security
