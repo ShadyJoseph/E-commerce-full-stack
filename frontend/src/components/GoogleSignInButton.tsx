@@ -4,9 +4,10 @@ import Loader from './Loader';
 interface GoogleSignInButtonProps {
   isLoading: boolean;
   onClick: () => void;
+  mssg:string;
 }
 
-const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ isLoading, onClick }) => (
+const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ isLoading, onClick, mssg }) => (
   <div className="flex items-center justify-center">
     <button
       onClick={onClick}
@@ -41,7 +42,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ isLoading, onCl
               </g>
             </g>
           </svg>
-          <span>Sign In with Google</span>
+          <span>{mssg}</span>
         </div>
       )}
     </button>
