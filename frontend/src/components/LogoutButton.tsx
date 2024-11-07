@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FiLogOut } from 'react-icons/fi';
 import ConfirmationModal from './ConfirmationModal';
 import { useAuthStore } from '../stores/authStore';
 
@@ -23,9 +24,9 @@ const LogoutButton: React.FC = () => {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="text-red-600 font-medium hover:underline"
+        className="flex items-center text-lg transition-colors hover:text-primaryColor"
       >
-        Logout
+        <FiLogOut className="w-6 h-6" /> {/* Icon with size adjustments */}
       </button>
 
       {isModalOpen && (
