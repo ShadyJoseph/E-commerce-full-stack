@@ -1,18 +1,76 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import './App.css';
 import NotFound from './pages/NotFound';
-import Signin from './pages/Sigin';
-import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
+import SignIn from './pages/SignIn';
+import SignUp from './pages/SignUp';
+import Home from './pages/Home';
+import MainLayout from './components/MainLayout';
+import NoNavbarLayout from './components/NoNavbarLayout';
+import Profile from './pages/Profile';
+import Cart from './pages/Cart';
+
 function App() {
   return (
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" element={<Signin />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/dashboard" element={< Dashboard/>} />
-          <Route path="*" element={<NotFound />} />
+          <Route
+            path="/home"
+            element={
+              <MainLayout>
+                <Home />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <MainLayout>
+                <Home />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <MainLayout>
+                <Profile />
+              </MainLayout>
+            }
+          />
+           <Route
+            path="/cart"
+            element={
+              <MainLayout>
+                <Cart />
+              </MainLayout>
+            }
+          />
+
+          {/* Routes without Navbar */}
+          <Route
+            path="/signin"
+            element={
+              <NoNavbarLayout>
+                <SignIn />
+              </NoNavbarLayout>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <NoNavbarLayout>
+                <SignUp />
+              </NoNavbarLayout>
+            }
+          />
+          <Route
+            path="*"
+            element={
+              <NoNavbarLayout>
+                <NotFound />
+              </NoNavbarLayout>
+            }
+          />
         </Routes>
       </div>
     </Router>

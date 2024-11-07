@@ -8,8 +8,7 @@ import { useThemeStore } from '../stores/themeStore';
 import InputField from '../components/InputField';
 import ValidationSchema from '../components/SignUpValidations';
 
-
-const Signup = () => {
+const SignUp = () => {
   const navigate = useNavigate();
   const { darkMode } = useThemeStore();
   const signUp = useAuthStore((state) => state.signUp);
@@ -24,7 +23,7 @@ const Signup = () => {
   ) => {
     try {
       const success = await signUp(values.email, values.password, values.displayName);
-      if (success) navigate('/dashboard');
+      if (success) navigate('/home');
     } catch (error) {
       setFieldError('submit', (error as Error)?.message || 'Failed to sign up');
     } finally {
@@ -38,7 +37,7 @@ const Signup = () => {
   };
 
   return (
-    <div className={`flex flex-col items-center justify-center min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100'} transition-colors`}>
+    <div className={`flex flex-col items-center justify-center min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} transition-colors`}>
       <div className={`w-full max-w-md p-8 rounded-lg shadow-lg border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'} transition-all`}>
         <h2 className={`text-3xl font-bold text-center ${darkMode ? 'text-gray-100' : 'text-gray-800'} mb-6`}>Create Account</h2>
 
@@ -100,7 +99,7 @@ const Signup = () => {
 
         <div className="mt-4 text-sm text-center">
           Already have an account?{' '}
-          <Link to="/" className={`text-blue-600 hover:underline ${darkMode ? 'dark:text-blue-400' : ''}`} aria-label="Navigate to Sign In">
+          <Link to="/signin" className={`text-blue-600 hover:underline ${darkMode ? 'dark:text-blue-400' : ''}`} aria-label="Navigate to Sign In">
             Sign in here
           </Link>
         </div>
@@ -109,4 +108,4 @@ const Signup = () => {
   );
 };
 
-export default Signup;
+export default SignUp;
