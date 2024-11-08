@@ -12,11 +12,11 @@ const LogoutButton: React.FC = () => {
     setIsLoading(true);
     try {
       await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
       setIsLoading(false);
       setIsModalOpen(false);
-    } catch (error) {
-      console.error(error);
-      setIsLoading(false);
     }
   };
 
@@ -24,9 +24,10 @@ const LogoutButton: React.FC = () => {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="flex items-center text-lg transition-colors hover:text-primaryColor"
+        className="text-lg transition-colors transition-transform transform hover:scale-110 hover:text-primaryColor"
+        aria-label="Logout"
       >
-        <FiLogOut className="w-6 h-6" /> {/* Icon with size adjustments */}
+        <FiLogOut className="w-6 h-6" />
       </button>
 
       {isModalOpen && (

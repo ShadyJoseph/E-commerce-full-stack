@@ -3,8 +3,8 @@ import NotFound from './pages/NotFound';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Home from './pages/Home';
-import MainLayout from './components/MainLayout';
-import NoNavbarLayout from './components/NoNavbarLayout';
+import MainLayout from './layouts/MainLayout';
+import NoNavbarLayout from './layouts/NoNavbarLayout';
 import Profile from './pages/Profile';
 import Cart from './pages/Cart';
 
@@ -66,9 +66,9 @@ function App() {
           <Route
             path="*"
             element={
-              <NoNavbarLayout>
+              <MainLayout>
                 <NotFound />
-              </NoNavbarLayout>
+              </MainLayout>
             }
           />
         </Routes>
