@@ -1,12 +1,12 @@
-// MobileMenu.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { HiOutlineX } from 'react-icons/hi';
 import { FiUser, FiShoppingCart } from 'react-icons/fi';
 import LogoutButton from './LogoutButton';
 import { useAuthStore } from '../stores/authStore';
+import { useThemeStore } from '../stores/themeStore';
 import CategoriesMenu from './MobileMenuCategories';
-import ThemeToggleButton from './ThemeToggleButton'; // Import the theme toggle button
+import ThemeToggleButton from './ThemeToggleButton';
 
 interface MobileMenuProps {
   isMobileMenuOpen: boolean;
@@ -15,12 +15,15 @@ interface MobileMenuProps {
 
 const MobileMenu: React.FC<MobileMenuProps> = ({ isMobileMenuOpen, toggleMobileMenu }) => {
   const { isAuthenticated } = useAuthStore();
+  const { darkMode } = useThemeStore();
 
   return (
     <>
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 z-10 flex flex-col items-center pt-20 pb-6 bg-gray-900 bg-opacity-95 text-white transition-transform duration-300 ease-in-out"
+          className={`fixed inset-0 z-10 flex flex-col items-center pt-20 pb-6 transition-transform duration-300 ease-in-out bg-opacity-60 backdrop-blur-sm transition-opacity duration-300 m-0 p-0 ${
+            darkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'
+          }`}
           role="menu"
           aria-labelledby="mobile-menu"
         >
@@ -74,10 +77,10 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isMobileMenuOpen, toggleMobileM
       {isMobileMenuOpen && (
         <button
           onClick={toggleMobileMenu}
-          className="fixed top-6 right-6 z-20 p-2 rounded-full bg-gray-700 text-white transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primaryColor"
+          className="fixed top-6 right-6 z-20 p-2 rounded-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primaryColor"
           aria-label="Close mobile menu"
         >
-          <HiOutlineX className="w-8 h-8 text-primaryColor" />
+          <HiOutlineX className={`w-8 h-8 ${darkMode ? 'text-white' : 'text-gray-900'}`} />
         </button>
       )}
     </>

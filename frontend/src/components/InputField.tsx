@@ -20,9 +20,8 @@ const InputField: React.FC<InputFieldProps> = ({ id, label, type, showToggle, to
     <div className="relative mb-4">
       <label
         htmlFor={id}
-        className={`block text-sm font-medium mb-1 ${
-          darkMode ? 'text-white' : 'text-blue-600'
-        }`}
+        className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-blue-600'
+          }`}
       >
         {label}
       </label>
@@ -31,9 +30,8 @@ const InputField: React.FC<InputFieldProps> = ({ id, label, type, showToggle, to
         id={id}
         name={id}
         aria-describedby={`${id}-error`}
-        className={`w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primaryColor ${
-          disabled ? 'bg-gray-200 cursor-not-allowed' : ''
-        } ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}
+        className={`w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primaryColor ${disabled ? 'bg-gray-200 cursor-not-allowed' : ''
+          } ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}
         disabled={disabled}
       />
       {type === 'password' && (
@@ -42,7 +40,11 @@ const InputField: React.FC<InputFieldProps> = ({ id, label, type, showToggle, to
           onClick={toggleVisibility}
           aria-label={showToggle ? 'Hide password' : 'Show password'}
         >
-          {showToggle ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
+          {showToggle ? (
+            <AiOutlineEye color={darkMode ? 'white' : 'grey'} />
+          ) : (
+            <AiOutlineEyeInvisible color={darkMode ? 'white' : 'grey'} />
+          )}
         </span>
       )}
       <ErrorMessage

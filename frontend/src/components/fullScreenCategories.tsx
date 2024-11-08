@@ -1,10 +1,9 @@
-// Menu.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { HiChevronDown, HiChevronUp } from 'react-icons/hi';
 import { useThemeStore } from '../stores/themeStore';
 
-const Menu: React.FC = () => {
+const Categories: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { darkMode } = useThemeStore();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -69,4 +68,4 @@ const Menu: React.FC = () => {
   );
 };
 
-export default Menu;
+export default Categories;

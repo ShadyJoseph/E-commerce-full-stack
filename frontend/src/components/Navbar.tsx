@@ -8,7 +8,7 @@ import LogoutButton from './LogoutButton';
 import { useThemeStore } from '../stores/themeStore';
 import { useAuthStore } from '../stores/authStore';
 import MobileMenu from './MobileMenu';
-import Menu from './fullScreenCategories';
+import Categories from './fullScreenCategories';
 
 const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -37,9 +37,9 @@ const Navbar: React.FC = () => {
             </Link>
           </div>
 
-          {/* Desktop Menu */}
+          {/* Desktop Categories */}
           <div className="hidden md:flex items-center space-x-4">
-            <Menu />
+            <Categories />
           </div>
 
           {/* Action Icons */}

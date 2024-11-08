@@ -1,13 +1,14 @@
-// CategoriesMenu.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useThemeStore } from '../stores/themeStore';
 
 interface CategoriesMenuProps {
-  onClick?: () => void;  // Optional callback to close the menu on link click
-  isMobile?: boolean;  // Toggle styling for mobile or desktop usage
+  onClick?: () => void; 
+  isMobile?: boolean;
 }
 
 const CategoriesMenu: React.FC<CategoriesMenuProps> = ({ onClick, isMobile = false }) => {
+  const { darkMode } = useThemeStore(); // Access the theme state
   const categories = ['Home', 'Men', 'Women', 'Kids'];
 
   return (
@@ -18,7 +19,9 @@ const CategoriesMenu: React.FC<CategoriesMenuProps> = ({ onClick, isMobile = fal
           to={`/${category.toLowerCase()}`}
           onClick={onClick}
           className={`text-lg font-semibold tracking-wider transition-all duration-200 ease-in-out ${
-            isMobile ? 'hover:underline hover:text-primaryColor text-white' : 'hover:text-primaryColor'
+            isMobile
+              ? `${darkMode ? 'text-gray-200 hover:text-primaryColor' : 'text-gray-900 hover:text-primaryColor'}`
+              : `${darkMode ? 'text-white hover:text-primaryColor' : 'text-gray-900 hover:text-primaryColor'}`
           }`}
           aria-label={category}
         >
