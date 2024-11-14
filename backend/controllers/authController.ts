@@ -12,20 +12,20 @@ import handleSessionLogout from '../utils/handleSessionLogout';
 import handleJwtLogout from '../utils/handleJwtLogout'
 
 export const googleCallback = (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('google', { failureRedirect: '/api/auth/login', session: true })(
+  passport.authenticate('google', { failureRedirect: '/api/auth/login', session: false })(
     req,
     res,
     async (err: Error) => {
       if (err || !req.user) {
         logger.error(`Google login error: ${err?.message || 'User not authenticated'}`);
-        return res.redirect('/api/auth/login');
+        return res.status(401).json({ success: false, message: 'Authentication failed' });
       }
 
       try {
         const googleId = (req.user as IUser).googleId;
         if (!googleId) {
           logger.error('Google ID is undefined');
-          return res.redirect('/api/auth/login');
+          return res.status(400).json({ success: false, message: 'Google ID is undefined' });
         }
 
         const existingUser = await findUserByGoogleId(googleId);
@@ -37,14 +37,23 @@ export const googleCallback = (req: Request, res: Response, next: NextFunction) 
             return next(loginErr);
           }
 
-          res.cookie('token', generateToken(user._id.toString(), user.role), {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 24 * 60 * 60 * 1000,
-          });
+          // Generate JWT token
+          const token = generateToken(user._id.toString(), user.role);
+
           logger.info(`Google user authenticated: ${user.email}`);
-          res.redirect('/api/dashboard');
+
+          // Send JSON response with user data and token to be handled by frontend
+          res.status(200).json({
+            success: true,
+            message: 'Authentication successful',
+            user: {
+              id: user._id,
+              email: user.email,
+              displayName: user.displayName,
+              role: user.role,
+            },
+            token,
+          });
         });
       } catch (error) {
         handleServerError(res, error as Error, 'Error during Google callback');
@@ -52,6 +61,8 @@ export const googleCallback = (req: Request, res: Response, next: NextFunction) 
     }
   );
 };
+
+
 
 // User Signup
 export const userSignUp = async (req: Request, res: Response) => {

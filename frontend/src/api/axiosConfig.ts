@@ -1,6 +1,7 @@
-// api/axiosConfig.ts
+// src/api/axiosConfig.ts
+
 import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { getAuthToken, redirectToSignIn } from './endpoints/auth';
+import { getAuthToken, redirectToSignIn } from './auth';
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
@@ -13,15 +14,16 @@ const api = axios.create({
 // Request Interceptor to attach token from cookies
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = getAuthToken();
+    const token = getAuthToken();  // Get token from cookies
     if (token) {
       config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;  // Attach token to request
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
+
 
 // Response Interceptor to handle token expiration and errors
 api.interceptors.response.use(

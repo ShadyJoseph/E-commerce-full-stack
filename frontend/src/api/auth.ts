@@ -1,3 +1,5 @@
+// src/api/auth.ts
+
 // Get the auth token from cookies
 export const getAuthToken = (): string | null => {
   const token = document.cookie.split('; ').find(row => row.startsWith('token='));

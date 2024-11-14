@@ -1,6 +1,8 @@
+// src/store/authStore.ts
+
 import { create } from 'zustand';
 import api from '../api/axiosConfig';
-import { getAuthToken, setAuthToken, removeAuthToken } from '../api/endpoints/auth';
+import { getAuthToken, setAuthToken, removeAuthToken } from '../api/auth';
 
 interface User {
   email: string;
@@ -18,7 +20,7 @@ interface AuthState {
   signUp: (email: string, password: string, displayName: string) => Promise<boolean>;
 }
 
-export const useAuthStore = create<AuthState>((set: (partial: Partial<AuthState>) => void) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: getAuthToken(),
   isAuthenticated: !!getAuthToken(),
@@ -43,7 +45,7 @@ export const useAuthStore = create<AuthState>((set: (partial: Partial<AuthState>
     window.location.href = `${process.env.REACT_APP_API_URL}/auth/google`;
   },
 
-  signUp: async (email: string, password: string, displayName: string): Promise<boolean> => {
+  signUp: async (email: string, password: string, displayName: string) => {
     try {
       const response = await api.post('/auth/signup', { email, password, displayName });
       const { token, user } = response.data;
