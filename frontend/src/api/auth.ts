@@ -1,25 +1,21 @@
-// src/api/auth.ts
+const COOKIE_NAME = 'token';
 
-// Get the auth token from cookies
 export const getAuthToken = (): string | null => {
-  const token = document.cookie.split('; ').find(row => row.startsWith('token='));
+  const token = document.cookie.split('; ').find(row => row.startsWith(`${COOKIE_NAME}=`));
   return token ? token.split('=')[1] : null;
 };
 
-// Set auth token in cookies
 export const setAuthToken = (token: string, expiresIn: number = 86400): void => {
   const expires = new Date(Date.now() + expiresIn * 1000).toUTCString();
-  document.cookie = `token=${token}; expires=${expires}; path=/; SameSite=Strict; Secure`;
+  document.cookie = `${COOKIE_NAME}=${token}; expires=${expires}; path=/; SameSite=Strict; Secure`;
 };
 
-// Remove auth token from cookies
 export const removeAuthToken = (): void => {
-  document.cookie = `token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Strict; Secure`;
+  document.cookie = `${COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Strict; Secure`;
 };
 
-// Redirect to sign-in page
-export const redirectToSignIn = (): void => {
+export const redirectToSignIn = (redirectPath = '/'): void => {
   localStorage.removeItem('user');
   removeAuthToken();
-  window.location.href = '/';
+  window.location.href = redirectPath;
 };

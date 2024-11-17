@@ -1,5 +1,3 @@
-// src/store/authStore.ts
-
 import { create } from 'zustand';
 import api from '../api/axiosConfig';
 import { getAuthToken, setAuthToken, removeAuthToken } from '../api/auth';
@@ -27,16 +25,16 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (email: string, password: string) => {
     try {
-      const response = await api.post('/auth/login', { email, password });
-      const { token, user } = response.data;
+      const { data } = await api.post('/auth/login', { email, password });
+      const { token, user } = data;
 
-      set({ user, token, isAuthenticated: true });
       setAuthToken(token);
+      set({ user, token, isAuthenticated: true });
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      return true; // Indicate successful login
+
+      return true;
     } catch (error: any) {
-      console.error("Login failed:", error);
+      console.error('Login failed:', error.response?.data?.message || error.message);
       throw new Error(error.response?.data?.message || 'Login failed');
     }
   },
@@ -47,16 +45,16 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signUp: async (email: string, password: string, displayName: string) => {
     try {
-      const response = await api.post('/auth/signup', { email, password, displayName });
-      const { token, user } = response.data;
+      const { data } = await api.post('/auth/signup', { email, password, displayName });
+      const { token, user } = data;
 
-      set({ user, token, isAuthenticated: true });
       setAuthToken(token);
+      set({ user, token, isAuthenticated: true });
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-      return true; // Indicate successful signup
+      return true;
     } catch (error: any) {
-      console.error("Signup failed:", error.response?.data?.message || error.message);
+      console.error('Signup failed:', error.response?.data?.message || error.message);
       throw new Error(error.response?.data?.message || 'Signup failed');
     }
   },
@@ -64,11 +62,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     try {
       await api.post('/auth/logout');
-      set({ user: null, token: null, isAuthenticated: false });
       removeAuthToken();
       delete api.defaults.headers.common['Authorization'];
+      set({ user: null, token: null, isAuthenticated: false });
     } catch (error: any) {
-      console.error("Logout failed:", error.response?.data?.message || error.message);
+      console.error('Logout failed:', error.response?.data?.message || error.message);
       throw new Error('Logout failed');
     }
   },

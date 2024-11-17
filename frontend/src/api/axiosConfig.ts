@@ -1,5 +1,3 @@
-// src/api/axiosConfig.ts
-
 import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { getAuthToken, redirectToSignIn } from './auth';
 

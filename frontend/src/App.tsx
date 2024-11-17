@@ -46,7 +46,7 @@ function App() {
             }
           />
 
-          {/* Routes without Navbar */}
+          {/* Routes without Navbar and footer */}
           <Route
             path="/signin"
             element={

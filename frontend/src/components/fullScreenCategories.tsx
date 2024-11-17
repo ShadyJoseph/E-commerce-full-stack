@@ -56,7 +56,11 @@ const Categories: React.FC = () => {
             <Link
               key={category}
               to={`/${category.toLowerCase()}`}
-              className="block px-4 py-2 text-lg font-semibold hover:bg-gray-200"
+              className={`block px-4 py-2 text-lg font-semibold transition-colors duration-300 ${
+                darkMode
+                  ? 'hover:bg-gray-700 hover:text-gray-50'
+                  : 'hover:bg-gray-100 hover:text-gray-900'
+              }`}
               aria-label={category}
             >
               {category}
