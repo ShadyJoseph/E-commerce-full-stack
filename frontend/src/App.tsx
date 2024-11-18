@@ -7,7 +7,7 @@ import MainLayout from './layouts/MainLayout';
 import NoNavbarLayout from './layouts/NoNavbarLayout';
 import Profile from './pages/Profile';
 import Cart from './pages/Cart';
-
+import GoogleCallback from './pages/GoogleCallback';
 function App() {
   return (
     <Router>
@@ -42,6 +42,14 @@ function App() {
             element={
               <MainLayout>
                 <Cart />
+              </MainLayout>
+            }
+          />
+           <Route
+            path="/google/callback" 
+            element={
+              <MainLayout>
+                <GoogleCallback />
               </MainLayout>
             }
           />

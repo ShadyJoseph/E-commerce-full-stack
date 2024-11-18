@@ -7,8 +7,9 @@ export const getAuthToken = (): string | null => {
 
 export const setAuthToken = (token: string, expiresIn: number = 86400): void => {
   const expires = new Date(Date.now() + expiresIn * 1000).toUTCString();
-  document.cookie = `${COOKIE_NAME}=${token}; expires=${expires}; path=/; SameSite=Strict; Secure`;
+  document.cookie = `${COOKIE_NAME}=${token}; expires=${expires}; path=/; SameSite=Strict; Secure=${process.env.NODE_ENV === 'production'}`;
 };
+
 
 export const removeAuthToken = (): void => {
   document.cookie = `${COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Strict; Secure`;

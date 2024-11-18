@@ -3,6 +3,7 @@ import api from '../api/axiosConfig';
 import { getAuthToken, setAuthToken, removeAuthToken } from '../api/auth';
 
 interface User {
+  id:string
   email: string;
   displayName: string;
   role: string;
@@ -16,7 +17,10 @@ interface AuthState {
   googleLogin: () => void;
   logout: () => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<boolean>;
+  setAuthToken: (token: string) => void; // Add this
+  setUser: (user: User) => void;         // Add this
 }
+
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
@@ -39,9 +43,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  googleLogin: () => {
-    window.location.href = `${process.env.REACT_APP_API_URL}/auth/google`;
-  },
+ googleLogin :() => {
+  window.location.href = `${process.env.REACT_APP_API_URL}/auth/google?redirect_uri=${encodeURIComponent(process.env.REACT_APP_FRONTEND_URL + "/google/callback")}`;
+},
 
   signUp: async (email: string, password: string, displayName: string) => {
     try {
@@ -69,5 +73,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       console.error('Logout failed:', error.response?.data?.message || error.message);
       throw new Error('Logout failed');
     }
+  },
+
+  setAuthToken: (token: string) => {
+    setAuthToken(token);
+    set({ token, isAuthenticated: true });
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  },
+
+  setUser: (user: User) => {
+    set({ user });
   },
 }));

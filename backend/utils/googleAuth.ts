@@ -12,9 +12,15 @@ const googleAuth = (req: Request, res: Response, next: NextFunction) => {
   }
 
   logger.info('Redirecting to Google for authentication');
-  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+  
+  // Ensure redirectUri is always a string
+  const redirectUri = (req.query.redirect_uri as string) || process.env.FRONTEND_URL || '';
+
+  // Pass redirectUri as state after encoding
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    state: encodeURIComponent(redirectUri), // State to pass redirect URI
+  })(req, res, next);
 };
 
 export default googleAuth;
-
-

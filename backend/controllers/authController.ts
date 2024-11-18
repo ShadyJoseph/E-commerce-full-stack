@@ -12,56 +12,39 @@ import handleSessionLogout from '../utils/handleSessionLogout';
 import handleJwtLogout from '../utils/handleJwtLogout'
 
 export const googleCallback = (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('google', { failureRedirect: '/api/auth/login', session: false })(
-    req,
-    res,
-    async (err: Error) => {
-      if (err || !req.user) {
-        logger.error(`Google login error: ${err?.message || 'User not authenticated'}`);
-        return res.status(401).json({ success: false, message: 'Authentication failed' });
-      }
-
-      try {
-        const googleId = (req.user as IUser).googleId;
-        if (!googleId) {
-          logger.error('Google ID is undefined');
-          return res.status(400).json({ success: false, message: 'Google ID is undefined' });
-        }
-
-        const existingUser = await findUserByGoogleId(googleId);
-        const user = existingUser || (await createGoogleUser(req.user as IUser));
-        if (!user) throw new Error('Failed to create or find the user');
-
-        req.login(user, (loginErr) => {
-          if (loginErr) {
-            return next(loginErr);
-          }
-
-          // Generate JWT token
-          const token = generateToken(user._id.toString(), user.role);
-
-          logger.info(`Google user authenticated: ${user.email}`);
-
-          // Send JSON response with user data and token to be handled by frontend
-          res.status(200).json({
-            success: true,
-            message: 'Authentication successful',
-            user: {
-              id: user._id,
-              email: user.email,
-              displayName: user.displayName,
-              role: user.role,
-            },
-            token,
-          });
-        });
-      } catch (error) {
-        handleServerError(res, error as Error, 'Error during Google callback');
-      }
+  passport.authenticate('google', { failureRedirect: '/signin', session: false })(req, res, async (err: Error) => {
+    if (err || !req.user) {
+      logger.error(`Google login error: ${err?.message || 'User not authenticated'}`);
+      return res.redirect(`${process.env.FRONTEND_URL}/signin?error=auth_failed`);
     }
-  );
-};
 
+    try {
+      const googleId = (req.user as IUser).googleId;
+      if (!googleId) {
+        logger.error('Google ID is undefined');
+        return res.redirect(`${process.env.FRONTEND_URL}/signin?error=google_id_missing`);
+      }
+
+      const existingUser = await findUserByGoogleId(googleId);
+      const user = existingUser || (await createGoogleUser(req.user as IUser));
+      if (!user) {
+        logger.error('Failed to create or find the user');
+        throw new Error('User not found or created');
+      }
+
+      const token = generateToken(user._id.toString(), user.role);
+
+      logger.info(`Google user authenticated: ${user.email}`);
+      
+      // Construct the redirect URL with query parameters
+      const redirectUrl = `${process.env.FRONTEND_URL}/google/callback?token=${encodeURIComponent(token)}&id=${encodeURIComponent(user._id.toString())}&email=${encodeURIComponent(user.email)}&displayName=${encodeURIComponent(user.displayName)}`;
+      res.redirect(redirectUrl);
+    } catch (error) {
+      logger.error('Error during Google callback:', error);
+      res.redirect(`${process.env.FRONTEND_URL}/signin?error=server_error`);
+    }
+  });
+};
 
 
 // User Signup

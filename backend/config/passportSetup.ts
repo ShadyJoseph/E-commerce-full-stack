@@ -69,7 +69,7 @@ passport.use(
           email: email,
           refreshToken, // Save refresh token for new user
         });
-        
+
         await newUser.save();
         logger.info(`Created new user from Google OAuth: ${newUser.displayName}`);
         done(null, newUser);
