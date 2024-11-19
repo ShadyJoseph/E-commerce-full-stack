@@ -1,50 +1,61 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import Loader from '../components/Loader';
 
 const GoogleCallback = () => {
   const navigate = useNavigate();
   const { setAuthToken, setUser } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+  const isProcessed = useRef(false);  // Ref to prevent reprocessing
 
   useEffect(() => {
-    const url = window.location.href;
-    console.log('Full Callback URL:', url);
+    // Only process if not already done
+    if (isProcessed.current) return;
 
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
     const id = params.get('id');
     const email = params.get('email');
     const displayName = params.get('displayName');
+    const role = params.get('role') || 'user'; // Default role is 'user'
 
-    console.log('Callback Params:', { token, id, email, displayName });
+    console.log('Callback Params:', { id, email, displayName, role });
 
+    // Only process if all parameters are valid
     if (token && id && email && displayName) {
       try {
+        console.log('Before state update:', { token, id, email, displayName, role });
         setAuthToken(token);
-        setUser({ id, email, displayName, role: 'user' }); // Default role: 'user'
-        navigate('/'); // Navigate to the homepage
+        setUser({ id, email, displayName, role });
+        
+        // Mark the processing as completed to prevent multiple triggers
+        isProcessed.current = true;
+        console.log('After state update:', { user: useAuthStore.getState().user });
+
+        // No need for loading once state has been updated
+        setLoading(false);
+        console.log('Authentication successful, redirecting to home.');
+        navigate('/'); // Redirect to homepage after successful authentication
       } catch (error) {
         console.error('Error processing Google callback:', error);
-        navigate('/signin'); // Redirect to signin on failure
+        navigate('/signin'); // In case of error, navigate to sign-in page
       }
     } else {
-      // Log details to help identify why parameters are missing
-      console.error('Invalid or missing callback parameters:', { token, id, email, displayName });
-      
-      // Redirect to a dedicated error page with query info for debugging
-      const queryParams = new URLSearchParams({
-        error: 'missing_params',
-        token: token || '',
-        id: id || '',
-        email: email || '',
-        displayName: displayName || '',
-      }).toString();
-
-      navigate(`/error?${queryParams}`);
+      console.error('Invalid or missing callback parameters:', { id, email, displayName, role });
+      navigate(`/error?error=missing_params`);
     }
   }, [navigate, setAuthToken, setUser]);
 
-  return <div>Loading...</div>; // Add a spinner or animation for better UX
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <Loader height="80" width="80" color="#2b6cb0" />
+      </div>
+    );
+  }
+
+  return null; // In case of redirection, no need for further rendering
 };
 
 export default GoogleCallback;

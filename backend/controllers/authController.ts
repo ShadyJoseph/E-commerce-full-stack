@@ -12,57 +12,63 @@ import handleSessionLogout from '../utils/handleSessionLogout';
 import handleJwtLogout from '../utils/handleJwtLogout'
 
 export const googleCallback = (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('google', { failureRedirect: '/signin', session: false })(req, res, async (err: Error) => {
-    if (res.headersSent) return;
+  passport.authenticate('google', { failureRedirect: '/signin', session: false })(
+    req,
+    res,
+    async (err: Error) => {
+      if (res.headersSent) return;
 
-    if (err || !req.user) {
-      logger.error(`Google login error: ${err?.message || 'User not authenticated'}`);
-      return res.redirect(`${process.env.FRONTEND_URL}/signin?error=auth_failed`);
+      if (err || !req.user) {
+        logger.error(`Google login error: ${err?.message || 'User not authenticated'}`);
+        return res.redirect(`${process.env.FRONTEND_URL}/signin?error=auth_failed`);
+      }
+
+      try {
+        const googleUser = req.user as IUser;
+        if (!googleUser?.googleId) {
+          logger.error('Google ID is undefined in the authenticated user.');
+          return res.redirect(`${process.env.FRONTEND_URL}/signin?error=google_id_missing`);
+        }
+
+        let user = await findUserByGoogleId(googleUser.googleId);
+        if (!user) {
+          logger.info(`Creating a new user for Google ID: ${googleUser.googleId}`);
+          user = await createGoogleUser(googleUser);
+        }
+
+        if (!user) {
+          logger.error('Failed to create or retrieve the user.');
+          return res.redirect(`${process.env.FRONTEND_URL}/signin?error=user_creation_failed`);
+        }
+
+        const token = generateToken(user._id.toString(), user.role);
+        logger.info(`User authenticated successfully: ${user.email}`);
+
+        const redirectUri = req.query.state
+          ? decodeURIComponent(req.query.state as string)
+          : `${process.env.FRONTEND_URL}/google/callback`;
+
+        if (!redirectUri.startsWith(process.env.FRONTEND_URL || '')) {
+          logger.warn(`Invalid redirectUri in callback: ${redirectUri}`);
+          return res.redirect(`${process.env.FRONTEND_URL}/signin?error=invalid_redirect_uri`);
+        }
+
+        const redirectUrl = `${redirectUri}?token=${encodeURIComponent(
+          token
+        )}&id=${encodeURIComponent(user._id.toString())}&email=${encodeURIComponent(
+          user.email
+        )}&displayName=${encodeURIComponent(user.displayName)}`;
+
+        logger.info(`Redirecting user to: ${redirectUrl}`);
+        return res.redirect(redirectUrl);
+      } catch (error) {
+        logger.error(`Error during Google callback: ${(error as Error).message}`);
+        if (!res.headersSent) {
+          return res.redirect(`${process.env.FRONTEND_URL}/signin?error=server_error`);
+        }
+      }
     }
-
-    try {
-      const googleUser = req.user as IUser;
-      if (!googleUser?.googleId) {
-        logger.error('Google ID is undefined in the authenticated user.');
-        return res.redirect(`${process.env.FRONTEND_URL}/signin?error=google_id_missing`);
-      }
-
-      // Find or create the user in the database
-      let user = await findUserByGoogleId(googleUser.googleId);
-      if (!user) {
-        logger.info(`Creating a new user for Google ID: ${googleUser.googleId}`);
-        user = await createGoogleUser(googleUser);
-      }
-
-      if (!user) {
-        logger.error('Failed to create or retrieve the user.');
-        return res.redirect(`${process.env.FRONTEND_URL}/signin?error=user_creation_failed`);
-      }
-
-      // Generate a secure token
-      const token = generateToken(user._id.toString(), user.role);
-      logger.info(`User authenticated successfully: ${user.email}`);
-
-      // Retrieve and validate `redirectUri`
-      const redirectUri = req.query.state
-        ? decodeURIComponent(req.query.state as string)
-        : `${process.env.FRONTEND_URL}/google/callback`;
-
-      if (!redirectUri.startsWith(process.env.FRONTEND_URL || '')) {
-        logger.warn(`Invalid redirectUri in callback: ${redirectUri}`);
-        return res.redirect(`${process.env.FRONTEND_URL}/signin?error=invalid_redirect_uri`);
-      }
-
-      // Construct the redirect URL
-      const redirectUrl = `${redirectUri}?token=${encodeURIComponent(token)}&id=${encodeURIComponent(user._id.toString())}&email=${encodeURIComponent(user.email)}&displayName=${encodeURIComponent(user.displayName)}`;
-      return res.redirect(redirectUrl);
-    } catch (error) {
-      logger.error(`Error during Google callback: ${(error as Error).message}`);
-      if (!res.headersSent) {
-        return res.redirect(`${process.env.FRONTEND_URL}/signin?error=server_error`);
-      }
-    }
-  });
+  );
 };
 
 

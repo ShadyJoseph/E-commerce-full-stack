@@ -10,14 +10,15 @@ const googleAuth = (req: Request, res: Response, next: NextFunction) => {
 
   logger.info('Redirecting to Google for authentication.');
 
-  // Validate `redirectUri`
-  const redirectUri = req.query.redirect_uri ? decodeURIComponent(req.query.redirect_uri as string) : process.env.FRONTEND_URL || '';
+  const redirectUri = req.query.redirect_uri
+    ? decodeURIComponent(req.query.redirect_uri as string)
+    : process.env.FRONTEND_URL || '';
   if (!redirectUri.startsWith(process.env.FRONTEND_URL || '')) {
     logger.warn(`Invalid redirectUri: ${redirectUri}`);
     return res.status(400).json({ error: 'Invalid redirect_uri' });
   }
 
-  // Pass `redirectUri` as `state`
+  // Pass `redirectUri` as `state` to Google
   passport.authenticate('google', {
     scope: ['profile', 'email'],
     state: encodeURIComponent(redirectUri),

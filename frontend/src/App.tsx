@@ -8,6 +8,8 @@ import NoNavbarLayout from './layouts/NoNavbarLayout';
 import Profile from './pages/Profile';
 import Cart from './pages/Cart';
 import GoogleCallback from './pages/GoogleCallback';
+import ErrorPage from './pages/Error';
+
 function App() {
   return (
     <Router>
@@ -37,7 +39,7 @@ function App() {
               </MainLayout>
             }
           />
-           <Route
+          <Route
             path="/cart"
             element={
               <MainLayout>
@@ -45,8 +47,8 @@ function App() {
               </MainLayout>
             }
           />
-           <Route
-            path="/google/callback" 
+          <Route
+            path="/google/callback"
             element={
               <MainLayout>
                 <GoogleCallback />
@@ -69,6 +71,14 @@ function App() {
               <NoNavbarLayout>
                 <SignUp />
               </NoNavbarLayout>
+            }
+          />
+          <Route
+            path="/error"
+            element={
+              <MainLayout>
+                <ErrorPage />
+              </MainLayout>
             }
           />
           <Route
