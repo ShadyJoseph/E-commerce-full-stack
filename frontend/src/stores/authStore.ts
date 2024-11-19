@@ -43,10 +43,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
- googleLogin :() => {
-  window.location.href = `${process.env.REACT_APP_API_URL}/auth/google?redirect_uri=${encodeURIComponent(process.env.REACT_APP_FRONTEND_URL + "/google/callback")}`;
-},
-
+  googleLogin: () => {
+    const redirectUri = `${process.env.REACT_APP_FRONTEND_URL}/google/callback`;
+    const authUrl = `${process.env.REACT_APP_API_URL}/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    window.location.href = authUrl;
+  },
+  
   signUp: async (email: string, password: string, displayName: string) => {
     try {
       const { data } = await api.post('/auth/signup', { email, password, displayName });

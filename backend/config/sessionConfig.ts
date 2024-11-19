@@ -12,11 +12,11 @@ const sessionConfig = (mongoUrl: string, sessionSecret: string) => {
     }),
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Secure only in production
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', // Allow different settings per environment
+      secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     },
-    proxy: process.env.NODE_ENV === 'production', // Enable if behind a proxy in production
+    proxy: process.env.NODE_ENV === 'production',
   });
 };
 

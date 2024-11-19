@@ -23,14 +23,22 @@ const blacklistJwtToken = (token: string) => {
     }
 };
 
-// JWT Logout Handler
 const handleJwtLogout = (req: Request, res: Response) => {
     const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'Token required for logout' });
+    if (!token) {
+      if (!res.headersSent) {
+        return res.status(401).json({ message: 'Token required for logout' });
+      }
+      return; // Ensure function exits after responding
+    }
   
-    blacklistJwtToken(token);
+    blacklistJwtToken(token); // Token is guaranteed to be a string here
     res.clearCookie('token');
-    return res.status(200).json({ message: 'Logged out successfully' });
+  
+    if (!res.headersSent) {
+      res.status(200).json({ message: 'Logged out successfully' });
+    }
   };
-
-export default handleJwtLogout
+  
+  export default handleJwtLogout;
+  

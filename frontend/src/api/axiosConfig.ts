@@ -4,31 +4,37 @@ import { getAuthToken, redirectToSignIn } from './auth';
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
   withCredentials: true,
+  timeout: 15000, // Timeout after 15 seconds
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request Interceptor to attach token from cookies
+// Request Interceptor
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = getAuthToken();  // Get token from cookies
+    const token = getAuthToken();
     if (token) {
       config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${token}`;  // Attach token to request
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('Request interceptor error:', error);
+    return Promise.reject(error);
+  }
 );
 
-
-// Response Interceptor to handle token expiration and errors
+// Response Interceptor
 api.interceptors.response.use(
-  (response: AxiosResponse) => response, // Keep the full response for type safety
+  (response: AxiosResponse) => response,
   (error) => {
     if (error.response?.status === 401) {
+      console.warn('Unauthorized request. Redirecting to sign-in.');
       redirectToSignIn();
+    } else {
+      console.error('API error:', error);
     }
     return Promise.reject(error);
   }

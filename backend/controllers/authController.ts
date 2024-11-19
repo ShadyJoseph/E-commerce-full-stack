@@ -13,35 +13,54 @@ import handleJwtLogout from '../utils/handleJwtLogout'
 
 export const googleCallback = (req: Request, res: Response, next: NextFunction) => {
   passport.authenticate('google', { failureRedirect: '/signin', session: false })(req, res, async (err: Error) => {
+    if (res.headersSent) return;
+
     if (err || !req.user) {
       logger.error(`Google login error: ${err?.message || 'User not authenticated'}`);
       return res.redirect(`${process.env.FRONTEND_URL}/signin?error=auth_failed`);
     }
 
     try {
-      const googleId = (req.user as IUser).googleId;
-      if (!googleId) {
-        logger.error('Google ID is undefined');
+      const googleUser = req.user as IUser;
+      if (!googleUser?.googleId) {
+        logger.error('Google ID is undefined in the authenticated user.');
         return res.redirect(`${process.env.FRONTEND_URL}/signin?error=google_id_missing`);
       }
 
-      const existingUser = await findUserByGoogleId(googleId);
-      const user = existingUser || (await createGoogleUser(req.user as IUser));
+      // Find or create the user in the database
+      let user = await findUserByGoogleId(googleUser.googleId);
       if (!user) {
-        logger.error('Failed to create or find the user');
-        throw new Error('User not found or created');
+        logger.info(`Creating a new user for Google ID: ${googleUser.googleId}`);
+        user = await createGoogleUser(googleUser);
       }
 
-      const token = generateToken(user._id.toString(), user.role);
+      if (!user) {
+        logger.error('Failed to create or retrieve the user.');
+        return res.redirect(`${process.env.FRONTEND_URL}/signin?error=user_creation_failed`);
+      }
 
-      logger.info(`Google user authenticated: ${user.email}`);
-      
-      // Construct the redirect URL with query parameters
-      const redirectUrl = `${process.env.FRONTEND_URL}/google/callback?token=${encodeURIComponent(token)}&id=${encodeURIComponent(user._id.toString())}&email=${encodeURIComponent(user.email)}&displayName=${encodeURIComponent(user.displayName)}`;
-      res.redirect(redirectUrl);
+      // Generate a secure token
+      const token = generateToken(user._id.toString(), user.role);
+      logger.info(`User authenticated successfully: ${user.email}`);
+
+      // Retrieve and validate `redirectUri`
+      const redirectUri = req.query.state
+        ? decodeURIComponent(req.query.state as string)
+        : `${process.env.FRONTEND_URL}/google/callback`;
+
+      if (!redirectUri.startsWith(process.env.FRONTEND_URL || '')) {
+        logger.warn(`Invalid redirectUri in callback: ${redirectUri}`);
+        return res.redirect(`${process.env.FRONTEND_URL}/signin?error=invalid_redirect_uri`);
+      }
+
+      // Construct the redirect URL
+      const redirectUrl = `${redirectUri}?token=${encodeURIComponent(token)}&id=${encodeURIComponent(user._id.toString())}&email=${encodeURIComponent(user.email)}&displayName=${encodeURIComponent(user.displayName)}`;
+      return res.redirect(redirectUrl);
     } catch (error) {
-      logger.error('Error during Google callback:', error);
-      res.redirect(`${process.env.FRONTEND_URL}/signin?error=server_error`);
+      logger.error(`Error during Google callback: ${(error as Error).message}`);
+      if (!res.headersSent) {
+        return res.redirect(`${process.env.FRONTEND_URL}/signin?error=server_error`);
+      }
     }
   });
 };
@@ -108,18 +127,22 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
   const token = req.headers.authorization?.split(' ')[1];
 
   try {
+    // Handle JWT Logout
     if (token) {
-      handleJwtLogout(req, res); // Handle JWT logout by blacklisting the token
+      handleJwtLogout(req, res); // Send response for JWT logout
+      return; // Exit after handling JWT logout to avoid multiple responses
     }
 
+    // Handle Session Logout
     if (req.isAuthenticated() && user?.googleId) {
-      handleSessionLogout(req, res); // Handle session logout specifically for Google-authenticated users
-    } else if (!token) {
-      return res.status(400).json({ message: 'No active session or token found for logout.' });
+      handleSessionLogout(req, res); // Send response for session logout
+      return; // Exit after handling session logout
     }
+
+    // If no session or token is found
+    res.status(400).json({ message: 'No active session or token found for logout.' });
   } catch (error: any) {
     logger.error(`Logout error for user ${user?.email || user?.displayName}: ${error.message}`);
-    return res.status(500).json({ message: 'Unexpected logout error' });
+    res.status(500).json({ message: 'Unexpected logout error' });
   }
 };
-

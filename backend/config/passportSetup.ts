@@ -33,50 +33,50 @@ interface GoogleProfile {
   emails?: { value: string }[];
 }
 
-// Google OAuth Strategy
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       callbackURL: process.env.GOOGLE_CALLBACK_URL!,
-      accessType: 'offline', // To get refresh token
-      prompt: 'consent', // Forces consent screen every time
+      accessType: 'offline', // To get a refresh token
+      prompt: 'consent', // Forces the consent screen
     } as StrategyOptions,
-    async (accessToken: string, refreshToken: string, profile: GoogleProfile, done: (error: any, user?: IUser | false) => void) => {
+    async (accessToken, refreshToken, profile, done) => {
       try {
-        const existingUser = await User.findOne({ googleId: profile.id }) as IUser;
-
-        if (existingUser) {
-          // Update refresh token if available
-          if (refreshToken && existingUser.refreshToken !== refreshToken) {
-            existingUser.refreshToken = refreshToken; // Assign refreshToken to existing user
-            await existingUser.save();
-            logger.info(`Updated refresh token for user: ${existingUser.displayName}`);
-          }
-          return done(null, existingUser);
-        }
-
-        const email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : undefined;
+        const email = profile.emails?.[0]?.value;
         if (!email) {
-          logger.error(`No email found for Google user: ${profile.id}`);
-          return done(new Error('Email not provided by Google'), false);
+          logger.error(`Google profile missing email: ${profile.id}`);
+          return done(new Error('Google profile does not have an email'), false);
         }
 
-        const newUser: IUser = new User({
+        let user = await User.findOne({ googleId: profile.id });
+        if (user) {
+          // Update the refresh token if it has changed
+          if (refreshToken && user.refreshToken !== refreshToken) {
+            user.refreshToken = refreshToken;
+            await user.save();
+            logger.info(`Updated refresh token for user: ${user.email}`);
+          }
+          return done(null, user);
+        }
+
+        // Create a new user if not found
+        user = new User({
           googleId: profile.id,
           displayName: profile.displayName,
-          email: email,
-          refreshToken, // Save refresh token for new user
+          email,
+          refreshToken,
         });
-
-        await newUser.save();
-        logger.info(`Created new user from Google OAuth: ${newUser.displayName}`);
-        done(null, newUser);
+        await user.save();
+        logger.info(`New user created via Google OAuth: ${user.email}`);
+        done(null, user);
       } catch (error) {
-        logger.error('Error in Google Strategy:', error);
+        logger.error('Error during Google OAuth Strategy:', error);
         done(error);
       }
     }
   )
 );
+
+export default passport;
