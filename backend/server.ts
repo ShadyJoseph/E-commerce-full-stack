@@ -10,14 +10,13 @@ import userRoutes from './routes/userRoutes';
 import productRoutes from './routes/productRoutes';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import sessionConfig from './config/sessionConfig';
 
 // Load environment variables
 dotenv.config();
 
 // Check for critical environment variables
-if (!process.env.SESSION_SECRET || !process.env.MONGO_URI || !process.env.JWT_SECRET) {
-  throw new Error("Critical environment variables are missing.");
+if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
+  throw new Error('Critical environment variables are missing.');
 }
 
 // Initialize Express
@@ -39,16 +38,14 @@ app.use(limiter);
 
 // Connect to MongoDB
 connectDB();
-app.use(sessionConfig(process.env.MONGO_URI!, process.env.SESSION_SECRET!));
 
 // Initialize Passport
 app.use(passport.initialize());
-app.use(passport.session());
 
 // CORS Setup
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://yourproductiondomain.com' 
+  origin: process.env.NODE_ENV === 'production'
+    ? 'https://yourproductiondomain.com'
     : ['http://localhost:3000', 'http://localhost:5000'],
   credentials: true,
 };

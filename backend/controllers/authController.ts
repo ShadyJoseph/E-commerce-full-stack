@@ -6,16 +6,13 @@ import generateToken from '../utils/generateToken';
 import verifyUserCredentials from '../utils/UserCredentials';
 import createUserIfNotExists from '../utils/createUserIfNotExists';
 import { IUser } from '../models/user';
-import handleSessionLogout from '../utils/googleUtils/handleSessionLogout';
 import handleJwtLogout from '../utils/handleJwtLogout'
 import validateRedirectUri from '../utils/googleUtils/validateRedirectUri';
 import googleCallbackHandler from '../utils/googleUtils/googleCallbackHandler';
 
-
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 const isDevelopment = process.env.NODE_ENV === 'development';
-
 
 export const googleCallback = (req: Request, res: Response, next: NextFunction) => {
   passport.authenticate('google', { failureRedirect: '/signin', session: false })(req, res, async (err: Error) => {
@@ -37,7 +34,6 @@ export const googleCallback = (req: Request, res: Response, next: NextFunction) 
         return res.redirect(`${process.env.FRONTEND_URL}/signin?error=invalid_redirect_uri`);
       }
 
-      // Handle Google callback logic
       await googleCallbackHandler(googleUser, redirectUri, res);
     } catch (error) {
       logger.error(`Unexpected error during Google callback: ${(error as Error).message}`);
@@ -47,6 +43,7 @@ export const googleCallback = (req: Request, res: Response, next: NextFunction) 
     }
   });
 };
+
 
 // User Signup
 export const userSignUp = async (req: Request, res: Response) => {
@@ -112,26 +109,19 @@ export const userLogin = async (req: Request, res: Response) => {
 };
 
 export const logout = async (req: Request, res: Response, next: NextFunction) => {
-  const user = req.user as { email?: string; displayName?: string; googleId?: string };
-  const token = req.headers.authorization?.split(' ')[1];
-
   try {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    // Ensure a token is provided for logout
+    if (!token) {
+      logger.warn('Logout attempt without a token.');
+      return res.status(400).json({ message: 'No active token found for logout.' });
+    }
+
     // Handle JWT Logout
-    if (token) {
-      handleJwtLogout(req, res); // Send response for JWT logout
-      return; // Exit after handling JWT logout to avoid multiple responses
-    }
-
-    // Handle Session Logout
-    if (req.isAuthenticated() && user?.googleId) {
-      handleSessionLogout(req, res); // Send response for session logout
-      return; // Exit after handling session logout
-    }
-
-    // If no session or token is found
-    res.status(400).json({ message: 'No active session or token found for logout.' });
+    handleJwtLogout(req, res); // Invalidate token (if needed) and clear cookie
   } catch (error: any) {
-    logger.error(`Logout error for user ${user?.email || user?.displayName}: ${error.message}`);
+    logger.error(`Logout error: ${error.message}`);
     res.status(500).json({ message: 'Unexpected logout error' });
   }
 };
