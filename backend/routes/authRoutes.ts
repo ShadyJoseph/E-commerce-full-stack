@@ -5,7 +5,7 @@ import {
   userLogin,
   userSignUp,
 } from '../controllers/authController';
-import  googleAuth  from '../utils/googleAuth';
+import googleAuth from '../utils/googleUtils/googleAuth';
 import {
   validateUserSignUp,
   validateUserLogin,
@@ -13,7 +13,8 @@ import {
 } from '../middlewares/authValidation'; 
 
 import validateRequest from '../middlewares/validateRequest';
-//
+
+
 const router = Router();
 
 // Google Auth Routes

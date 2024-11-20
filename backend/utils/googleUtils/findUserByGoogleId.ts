@@ -1,5 +1,5 @@
-import logger from '../utils/logger';
-import User, { IUser } from '../models/user';
+import logger from '../logger';
+import User, { IUser } from '../../models/user';
 
 const findUserByGoogleId = async (googleId: string): Promise<IUser | null> => {
   try {

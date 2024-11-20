@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
-import logger from './logger';
+import logger from '../logger';
 
 const googleAuth = (req: Request, res: Response, next: NextFunction) => {
   if (req.isAuthenticated()) {

@@ -1,5 +1,5 @@
-import logger from '../utils/logger';
-import User, { IUser, UserRole } from '../models/user';
+import logger from '../logger';
+import User, { IUser, UserRole } from '../../models/user';
 
 const createGoogleUser = async (googleUser: Partial<IUser>): Promise<IUser> => {
   if (!googleUser.email || !googleUser.googleId) {

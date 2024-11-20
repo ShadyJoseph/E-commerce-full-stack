@@ -1,8 +1,19 @@
 import jwt from 'jsonwebtoken';
 
-// JWT Token Utility
-const generateToken = (userId: string, role: string) => {
-    return jwt.sign({ userId, role }, process.env.JWT_SECRET!, { expiresIn: '1d' });
-  };
-  
-export default generateToken
+const generateToken = (
+  userId: string,
+  role: string,
+  options: { issuer?: string; audience?: string } = {}
+) => {
+  return jwt.sign(
+    { userId, role },
+    process.env.JWT_SECRET!,
+    {
+      expiresIn: '1d',
+      issuer: options.issuer,
+      audience: options.audience,
+    }
+  );
+};
+
+export default generateToken;

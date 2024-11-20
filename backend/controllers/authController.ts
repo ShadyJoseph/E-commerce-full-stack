@@ -5,72 +5,48 @@ import handleServerError from '../utils/handleServerError';
 import generateToken from '../utils/generateToken';
 import verifyUserCredentials from '../utils/UserCredentials';
 import createUserIfNotExists from '../utils/createUserIfNotExists';
-import findUserByGoogleId from '../utils/findUserByGoogleId';
-import createGoogleUser from '../utils/createGoogleUser';
 import { IUser } from '../models/user';
-import handleSessionLogout from '../utils/handleSessionLogout';
+import handleSessionLogout from '../utils/googleUtils/handleSessionLogout';
 import handleJwtLogout from '../utils/handleJwtLogout'
+import validateRedirectUri from '../utils/googleUtils/validateRedirectUri';
+import googleCallbackHandler from '../utils/googleUtils/googleCallbackHandler';
+
+
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 
 export const googleCallback = (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('google', { failureRedirect: '/signin', session: false })(
-    req,
-    res,
-    async (err: Error) => {
-      if (res.headersSent) return;
+  passport.authenticate('google', { failureRedirect: '/signin', session: false })(req, res, async (err: Error) => {
+    if (res.headersSent) return;
 
-      if (err || !req.user) {
-        logger.error(`Google login error: ${err?.message || 'User not authenticated'}`);
-        return res.redirect(`${process.env.FRONTEND_URL}/signin?error=auth_failed`);
+    if (err || !req.user) {
+      logger.error(`Google login error: ${err?.message || 'User not authenticated'}`);
+      return res.redirect(`${process.env.FRONTEND_URL}/signin?error=auth_failed`);
+    }
+
+    try {
+      const googleUser = req.user as IUser;
+
+      // Validate Google user and redirect URI
+      const redirectUri = validateRedirectUri(req.query.state as string) || `${process.env.FRONTEND_URL}/google/callback`;
+
+      if (!redirectUri) {
+        logger.warn(`Invalid redirectUri in callback: ${req.query.state}`);
+        return res.redirect(`${process.env.FRONTEND_URL}/signin?error=invalid_redirect_uri`);
       }
 
-      try {
-        const googleUser = req.user as IUser;
-        if (!googleUser?.googleId) {
-          logger.error('Google ID is undefined in the authenticated user.');
-          return res.redirect(`${process.env.FRONTEND_URL}/signin?error=google_id_missing`);
-        }
-
-        let user = await findUserByGoogleId(googleUser.googleId);
-        if (!user) {
-          logger.info(`Creating a new user for Google ID: ${googleUser.googleId}`);
-          user = await createGoogleUser(googleUser);
-        }
-
-        if (!user) {
-          logger.error('Failed to create or retrieve the user.');
-          return res.redirect(`${process.env.FRONTEND_URL}/signin?error=user_creation_failed`);
-        }
-
-        const token = generateToken(user._id.toString(), user.role);
-        logger.info(`User authenticated successfully: ${user.email}`);
-
-        const redirectUri = req.query.state
-          ? decodeURIComponent(req.query.state as string)
-          : `${process.env.FRONTEND_URL}/google/callback`;
-
-        if (!redirectUri.startsWith(process.env.FRONTEND_URL || '')) {
-          logger.warn(`Invalid redirectUri in callback: ${redirectUri}`);
-          return res.redirect(`${process.env.FRONTEND_URL}/signin?error=invalid_redirect_uri`);
-        }
-
-        const redirectUrl = `${redirectUri}?token=${encodeURIComponent(
-          token
-        )}&id=${encodeURIComponent(user._id.toString())}&email=${encodeURIComponent(
-          user.email
-        )}&displayName=${encodeURIComponent(user.displayName)}`;
-
-        logger.info(`Redirecting user to: ${redirectUrl}`);
-        return res.redirect(redirectUrl);
-      } catch (error) {
-        logger.error(`Error during Google callback: ${(error as Error).message}`);
-        if (!res.headersSent) {
-          return res.redirect(`${process.env.FRONTEND_URL}/signin?error=server_error`);
-        }
+      // Handle Google callback logic
+      await googleCallbackHandler(googleUser, redirectUri, res);
+    } catch (error) {
+      logger.error(`Unexpected error during Google callback: ${(error as Error).message}`);
+      if (!res.headersSent) {
+        return res.redirect(`${process.env.FRONTEND_URL}/signin?error=server_error`);
       }
     }
-  );
+  });
 };
-
 
 // User Signup
 export const userSignUp = async (req: Request, res: Response) => {
@@ -84,7 +60,11 @@ export const userSignUp = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const token = generateToken(newUser._id.toString(), newUser.role);
+    const token = generateToken(newUser._id.toString(), newUser.role, {
+      issuer: isDevelopment ? BACKEND_URL : process.env.BACKEND_URL!,
+      audience: isDevelopment ? FRONTEND_URL : process.env.FRONTEND_URL!,
+    });
+
     res.status(201).cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -112,7 +92,10 @@ export const userLogin = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const token = generateToken(user._id.toString(), user.role);
+    const token = generateToken(user._id.toString(), user.role, {
+      issuer: isDevelopment ? BACKEND_URL : process.env.BACKEND_URL!,
+      audience: isDevelopment ? FRONTEND_URL : process.env.FRONTEND_URL!,
+    });
     res.status(200).cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
