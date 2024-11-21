@@ -10,7 +10,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div>
       <Navbar />
-      <main className="content">{children}</main>
+      <main className="content py-16">{children}</main>
       <Footer/>
     </div>
   );

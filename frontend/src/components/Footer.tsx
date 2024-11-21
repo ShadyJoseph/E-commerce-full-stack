@@ -8,21 +8,19 @@ const Footer: React.FC = () => {
 
   return (
     <footer
-      className={`py-12 ${
+      className={` py-6 ${
         darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
       }`}
     >
       <div className="container mx-auto px-6 md:px-12">
         {/* Main Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-center">
           {/* Contact Section */}
           <div className="flex flex-col items-center space-y-4">
             <p className="text-lg font-bold">Contact Us</p>
             <div className="flex items-center space-x-3">
               <IoMail className="text-2xl" />
-              <span className="text-sm">
-                shadyjosephabadeer2003@gmail.com
-              </span>
+              <span className="text-sm">shadyjosephabadeer2003@gmail.com</span>
             </div>
             <div className="flex items-center space-x-3">
               <IoLocationSharp className="text-2xl" />
@@ -95,7 +93,7 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Footer Bottom */}
-        <div className="text-center mt-10 opacity-80">
+        <div className="text-center mt-8 opacity-80">
           <p className="text-sm">
             &copy; 2024 Your Company, Inc. All rights reserved.
           </p>
