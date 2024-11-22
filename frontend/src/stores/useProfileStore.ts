@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import api from '../api/axiosConfig';
+import { useAuthStore } from './authStore';
 
-// Define the UserProfile interface
 export interface Address {
   street: string;
   city: string;
@@ -10,50 +10,118 @@ export interface Address {
   country: string;
 }
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   email: string;
   displayName: string;
   role: string;
-  addresses: Address[]; // Make addresses an array of Address objects
-  // Add other fields as required
+  addresses: Address[];
+  wishlist: string[];
 }
 
-// Define the state and actions
 interface UserProfileState {
   profile: UserProfile | null;
   loading: boolean;
   error: string | null;
   getProfile: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>, password?: string) => Promise<void>;
+  addAddress: (address: Address) => Promise<void>;
+  removeAddress: (addressId: string) => Promise<void>;
+  clearProfile: () => void;
 }
 
-// Create the Zustand store
 export const useUserProfileStore = create<UserProfileState>((set) => ({
-  profile: null,
+  profile: JSON.parse(localStorage.getItem('profile') || 'null'),
   loading: false,
   error: null,
 
-  // Action to get the user profile
   getProfile: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await api.get('users/profile');
-      set({ profile: response.data.user, loading: false });
+      const response = await api.get('/users/profile');
+      const profile = response.data.user;
+
+      localStorage.setItem('profile', JSON.stringify(profile));
+      set({ profile, loading: false });
+
+      useAuthStore.getState().setUser({
+        id: profile.id,
+        email: profile.email,
+        displayName: profile.displayName,
+        role: profile.role,
+      });
     } catch (error: any) {
-      set({ error: error.response?.data?.message || 'Failed to fetch profile', loading: false });
+      set({
+        error: error.response?.data?.message || 'Failed to fetch profile',
+        loading: false,
+      });
     }
   },
 
-  // Action to update the user profile
   updateProfile: async (data, password) => {
     set({ loading: true, error: null });
     try {
       const payload = password ? { ...data, password } : data;
-      const response = await api.put('users/profile', payload);
-      set({ profile: response.data.user, loading: false });
+      const response = await api.put('/users/profile', payload);
+      const profile = response.data.user;
+
+      localStorage.setItem('profile', JSON.stringify(profile));
+      set({ profile, loading: false });
+
+      useAuthStore.getState().setUser({
+        id: profile.id,
+        email: profile.email,
+        displayName: profile.displayName,
+        role: profile.role,
+      });
     } catch (error: any) {
-      set({ error: error.response?.data?.message || 'Failed to update profile', loading: false });
+      set({
+        error: error.response?.data?.message || 'Failed to update profile',
+        loading: false,
+      });
     }
+  },
+
+  addAddress: async (address) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await api.put('/users/profile', {
+        addresses: [...(useUserProfileStore.getState().profile?.addresses || []), address],
+      });
+      const profile = response.data.user;
+
+      localStorage.setItem('profile', JSON.stringify(profile));
+      set({ profile, loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || 'Failed to add address',
+        loading: false,
+      });
+    }
+  },
+
+  removeAddress: async (addressId) => {
+    set({ loading: true, error: null });
+    try {
+      const updatedAddresses = useUserProfileStore
+        .getState()
+        .profile?.addresses.filter((_, index) => index !== parseInt(addressId, 10)) || [];
+
+      const response = await api.put('/users/profile', { addresses: updatedAddresses });
+      const profile = response.data.user;
+
+      localStorage.setItem('profile', JSON.stringify(profile));
+      set({ profile, loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || 'Failed to remove address',
+        loading: false,
+      });
+    }
+  },
+
+  clearProfile: () => {
+    localStorage.removeItem('profile');
+    set({ profile: null });
   },
 }));
