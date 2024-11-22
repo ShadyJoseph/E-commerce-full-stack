@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import NotFound from './pages/NotFound';
 import SignIn from './pages/SignIn';
-import SignUp from './pages/SignUp';
+import SignUp from './pages/Signup';
 import Home from './pages/Home';
 import MainLayout from './layouts/MainLayout';
 import NoNavbarLayout from './layouts/NoNavbarLayout';
