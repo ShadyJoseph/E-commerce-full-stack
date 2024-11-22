@@ -46,7 +46,7 @@ export interface IUser extends Document {
   removeFromCart(productId: mongoose.Types.ObjectId, size: string, quantity:Number): Promise<boolean>;
 }
 
-// Define the User schema
+// User Schema
 const UserSchema: Schema<IUser> = new Schema(
   {
     googleId: { type: String },
@@ -94,22 +94,23 @@ const UserSchema: Schema<IUser> = new Schema(
   { timestamps: true }
 );
 
-// Pre-save hook to hash password
 UserSchema.pre<IUser>('save', async function (next) {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(this.password || '', 10);
+  if (this.isModified('password') && this.password) {
+    // Check if the password is already hashed
+    const isAlreadyHashed = /^\$2[aby]\$.{56}$/.test(this.password); // Matches bcrypt hash format
+    if (!isAlreadyHashed) {
+      this.password = await bcrypt.hash(this.password, 10);
+    }
   }
   next();
 });
 
+
 // Method to compare password with hashed password
 UserSchema.methods.comparePassword = async function (password: string): Promise<boolean> {
-  try {
-    return await bcrypt.compare(password, this.password || '');
-  } catch (error) {
-    throw new Error('Error comparing passwords');
-  }
+  return bcrypt.compare(password, this.password || '');
 };
+
 
 // Method to add an address
 UserSchema.methods.addAddress = async function (address: Address): Promise<void> {

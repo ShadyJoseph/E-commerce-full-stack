@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 import User from '../models/user';
 import logger from '../utils/logger';
 import ErrorResponse from '../utils/errorResponse';
-import hashPassword from '../utils/hashPassword';
 import { validateProductStock, validateAndFetchProduct } from '../utils/cartUtils';
 // Get user profile
 export const getProfile = (req: Request, res: Response) => {
@@ -22,7 +21,6 @@ export const getProfile = (req: Request, res: Response) => {
   }
 };
 
-// Update user profile controller
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const userId = req.user?._id;
@@ -35,10 +33,10 @@ export const updateProfile = async (req: Request, res: Response) => {
       return res.status(404).json(new ErrorResponse('User not found', 404));
     }
 
-    // If password is being updated, hash it
+    // If password is being updated, set it directly (no explicit hashing here)
     if (password) {
       logger.info(`Updating password for user: ${userId}`);
-      user.password = await hashPassword(password);
+      user.password = password;
     }
 
     // Update other fields
@@ -56,6 +54,7 @@ export const updateProfile = async (req: Request, res: Response) => {
     res.status(500).json(new ErrorResponse('Server error', 500));
   }
 };
+
 
 export const viewCart = async (req: Request, res: Response) => {
   try {

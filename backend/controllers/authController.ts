@@ -45,7 +45,6 @@ export const googleCallback = (req: Request, res: Response, next: NextFunction) 
 };
 
 
-// User Signup
 export const userSignUp = async (req: Request, res: Response) => {
   const { email, password, displayName, addresses } = req.body;
   logger.info(`Sign-up attempt for email: ${email}`);
@@ -70,7 +69,7 @@ export const userSignUp = async (req: Request, res: Response) => {
     }).json({
       message: 'Sign up successful',
       token,
-      user: { email: newUser.email, displayName: newUser.displayName }
+      user: { email: newUser.email, displayName: newUser.displayName },
     });
   } catch (error) {
     handleServerError(res, error as Error, `Sign-up error for email ${email}`);
@@ -97,11 +96,11 @@ export const userLogin = async (req: Request, res: Response) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000 // 1 day
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
     }).json({
       message: 'Login successful',
       token,
-      user: { email: user.email, displayName: user.displayName, role: user.role }
+      user: { email: user.email, displayName: user.displayName, role: user.role },
     });
   } catch (error) {
     handleServerError(res, error as Error, `Login error for email ${email}`);
