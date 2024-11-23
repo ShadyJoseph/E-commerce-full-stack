@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import api from '../api/axiosConfig';
-import { useAuthStore } from './authStore';
 
 export interface Address {
   street: string;
@@ -26,102 +25,72 @@ interface UserProfileState {
   getProfile: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>, password?: string) => Promise<void>;
   addAddress: (address: Address) => Promise<void>;
-  removeAddress: (addressId: string) => Promise<void>;
+  removeAddress: (index: number) => Promise<void>;
   clearProfile: () => void;
 }
 
-export const useUserProfileStore = create<UserProfileState>((set) => ({
-  profile: JSON.parse(localStorage.getItem('profile') || 'null'),
+const handleError = (error: any): string => {
+  return error.response?.data?.message || error.message || 'An error occurred';
+};
+
+export const useUserProfileStore = create<UserProfileState>((set, get) => ({
+  profile: null,
   loading: false,
   error: null,
 
+  // Fetch user profile from the API
   getProfile: async () => {
     set({ loading: true, error: null });
     try {
       const response = await api.get('/users/profile');
-      const profile = response.data.user;
-
-      localStorage.setItem('profile', JSON.stringify(profile));
-      set({ profile, loading: false });
-
-      useAuthStore.getState().setUser({
-        id: profile.id,
-        email: profile.email,
-        displayName: profile.displayName,
-        role: profile.role,
-      });
+      set({ profile: response.data.user, loading: false });
     } catch (error: any) {
-      set({
-        error: error.response?.data?.message || 'Failed to fetch profile',
-        loading: false,
-      });
+      set({ error: handleError(error), loading: false });
     }
   },
 
+  // Update user profile with optional password change
   updateProfile: async (data, password) => {
     set({ loading: true, error: null });
     try {
       const payload = password ? { ...data, password } : data;
       const response = await api.put('/users/profile', payload);
-      const profile = response.data.user;
 
-      localStorage.setItem('profile', JSON.stringify(profile));
-      set({ profile, loading: false });
-
-      useAuthStore.getState().setUser({
-        id: profile.id,
-        email: profile.email,
-        displayName: profile.displayName,
-        role: profile.role,
-      });
+      set({ profile: response.data.user, loading: false });
     } catch (error: any) {
-      set({
-        error: error.response?.data?.message || 'Failed to update profile',
-        loading: false,
-      });
+      set({ error: handleError(error), loading: false });
     }
   },
 
+  // Add a new address to the user's profile
   addAddress: async (address) => {
     set({ loading: true, error: null });
     try {
-      const response = await api.put('/users/profile', {
-        addresses: [...(useUserProfileStore.getState().profile?.addresses || []), address],
-      });
-      const profile = response.data.user;
+      const updatedAddresses = [...(get().profile?.addresses || []), address];
+      const response = await api.put('/users/profile', { addresses: updatedAddresses });
 
-      localStorage.setItem('profile', JSON.stringify(profile));
-      set({ profile, loading: false });
+      set({ profile: response.data.user, loading: false });
     } catch (error: any) {
-      set({
-        error: error.response?.data?.message || 'Failed to add address',
-        loading: false,
-      });
+      set({ error: handleError(error), loading: false });
     }
   },
 
-  removeAddress: async (addressId) => {
+  // Remove an address by its index
+  removeAddress: async (index) => {
     set({ loading: true, error: null });
     try {
-      const updatedAddresses = useUserProfileStore
-        .getState()
-        .profile?.addresses.filter((_, index) => index !== parseInt(addressId, 10)) || [];
+      const currentAddresses = get().profile?.addresses || [];
+      const updatedAddresses = currentAddresses.filter((_, i) => i !== index);
 
       const response = await api.put('/users/profile', { addresses: updatedAddresses });
-      const profile = response.data.user;
-
-      localStorage.setItem('profile', JSON.stringify(profile));
-      set({ profile, loading: false });
+      set({ profile: response.data.user, loading: false });
     } catch (error: any) {
-      set({
-        error: error.response?.data?.message || 'Failed to remove address',
-        loading: false,
-      });
+      set({ error: handleError(error), loading: false });
     }
   },
 
+  // Clear the profile from the store
   clearProfile: () => {
-    localStorage.removeItem('profile');
-    set({ profile: null });
+    set({ profile: null, loading: false, error: null });
   },
 }));
