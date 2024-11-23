@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Address, useUserProfileStore } from "../stores/useProfileStore";
 import { useThemeStore } from "../stores/themeStore";
 import Loader from "../components/Loader";
+import { FiUser } from "react-icons/fi";
 
 const ProfilePage = () => {
   const { profile, getProfile, updateProfile, loading, error } = useUserProfileStore();
@@ -60,11 +61,14 @@ const ProfilePage = () => {
 
   return (
     <div
-      className={`max-w-4xl mx-auto p-8 ${darkMode ? "bg-gray-900" : "bg-white"} shadow-xl rounded-xl mt-8 transition-all`}
+      className={`max-w-4xl mx-auto p-8 mt-12 shadow-2xl rounded-lg transition-all ${
+        darkMode ? "bg-gray-800 text-gray-200" : "bg-white text-gray-900"
+      }`}
     >
-      <h1 className={`text-4xl font-semibold text-center mb-8 ${darkMode ? "text-white" : "text-gray-900"}`}>
-        User Profile
-      </h1>
+      <div className="flex items-center justify-center p-4">
+        <FiUser className="w-16 h-16 text-indigo-500" />
+      </div>
+
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
       {feedbackMessage && (
         <p
@@ -77,47 +81,46 @@ const ProfilePage = () => {
       )}
       {isEditing ? (
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Name Field */}
-          <div className="space-y-4">
-            <label htmlFor="displayName" className={`text-sm font-medium ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
-              Name
+          <div className="space-y-2">
+            <label htmlFor="displayName" className="text-sm font-medium">
+              Full Name
             </label>
             <input
               type="text"
               id="displayName"
-              name="displayName"
               value={formData.displayName}
               onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-              className={`w-full p-4 border-2 rounded-lg transition duration-300 focus:ring-2 focus:ring-indigo-500 ${
-                darkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"
+              className={`w-full p-4 border rounded-lg transition focus:ring-2 ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600 focus:ring-indigo-400 text-gray-200"
+                  : "bg-gray-50 border-gray-300 focus:ring-indigo-500"
               }`}
-              placeholder="Your full name"
+              placeholder="Enter your full name"
             />
           </div>
 
-          {/* Email Field */}
-          <div className="space-y-4">
-            <label htmlFor="email" className={`text-sm font-medium ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
-              Email
+          <div className="space-y-2">
+            <label htmlFor="email" className="text-sm font-medium">
+              Email Address
             </label>
             <input
               type="email"
               id="email"
-              name="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className={`w-full p-4 border-2 rounded-lg transition duration-300 focus:ring-2 focus:ring-indigo-500 ${
-                darkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"
+              className={`w-full p-4 border rounded-lg transition focus:ring-2 ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600 focus:ring-indigo-400 text-gray-200"
+                  : "bg-gray-50 border-gray-300 focus:ring-indigo-500"
               }`}
-              placeholder="Your email address"
+              placeholder="Enter your email"
             />
           </div>
 
-          {/* Addresses */}
           <div className="space-y-4">
-            <label className={`text-sm font-medium ${darkMode ? "text-gray-200" : "text-gray-700"}`}>Addresses</label>
+            <label className="text-sm font-medium">Addresses</label>
             {formData.addresses.map((address, index) => (
-              <div key={index} className="space-y-2">
+              <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {["street", "city", "state", "postalCode", "country"].map((field) => (
                   <input
                     key={field}
@@ -125,8 +128,10 @@ const ProfilePage = () => {
                     name={field}
                     value={address[field as keyof Address] || ""}
                     onChange={(e) => handleChange(e, index)}
-                    className={`w-full p-4 border-2 rounded-lg transition duration-300 focus:ring-2 focus:ring-indigo-500 ${
-                      darkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"
+                    className={`w-full p-3 border rounded-lg transition focus:ring-2 ${
+                      darkMode
+                        ? "bg-gray-700 border-gray-600 focus:ring-indigo-400 text-gray-200"
+                        : "bg-gray-50 border-gray-300 focus:ring-indigo-500"
                     }`}
                     placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
                   />
@@ -135,9 +140,8 @@ const ProfilePage = () => {
             ))}
           </div>
 
-          {/* Password */}
-          <div className="space-y-4">
-            <label htmlFor="password" className={`text-sm font-medium ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
+          <div className="space-y-2">
+            <label htmlFor="password" className="text-sm font-medium">
               Password (optional)
             </label>
             <input
@@ -145,49 +149,44 @@ const ProfilePage = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`w-full p-4 border-2 rounded-lg transition duration-300 focus:ring-2 focus:ring-indigo-500 ${
-                darkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"
+              className={`w-full p-4 border rounded-lg transition focus:ring-2 ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600 focus:ring-indigo-400 text-gray-200"
+                  : "bg-gray-50 border-gray-300 focus:ring-indigo-500"
               }`}
-              placeholder="Enter password if updating"
+              placeholder="Enter new password if updating"
             />
           </div>
 
-          {/* Buttons */}
-          <div className="flex justify-between mt-6">
+          <div className="flex justify-end gap-4 mt-6">
             <button
               type="button"
               onClick={() => setIsEditing(false)}
-              className={`px-6 py-3 rounded-lg ${
-                darkMode ? "bg-gray-600 hover:bg-gray-500 text-white" : "bg-gray-300 hover:bg-gray-400 text-black"
-              } transition duration-300`}
+              className="px-6 py-3 rounded-lg bg-gray-500 hover:bg-gray-600 text-white transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className={`px-6 py-3 rounded-lg ${
-                darkMode ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "bg-indigo-600 hover:bg-indigo-700 text-white"
-              } disabled:opacity-50 transition duration-300`}
+              className="px-6 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition"
             >
-              {loading ? "Saving..." : "Save Changes"}
+              Save Changes
             </button>
           </div>
         </form>
       ) : (
         <div className="space-y-6">
-          {/* Display Profile Info */}
-          <div className={`text-lg ${darkMode ? "text-gray-200" : "text-gray-900"}`}>
+          <div className="text-lg">
             <strong>Name:</strong> {profile?.displayName || "N/A"}
           </div>
-          <div className={`text-lg ${darkMode ? "text-gray-200" : "text-gray-900"}`}>
+          <div className="text-lg">
             <strong>Email:</strong> {profile?.email || "N/A"}
           </div>
-          <div className={`text-lg ${darkMode ? "text-gray-200" : "text-gray-900"}`}>
+          <div className="text-lg">
             <strong>Addresses:</strong>
             {profile?.addresses && profile.addresses.length > 0 ? (
               profile.addresses.map((address, index) => (
-                <div key={index}>
+                <div key={index} className="mt-2">
                   <div>{address.street}</div>
                   <div>
                     {address.city}, {address.state}
@@ -203,9 +202,7 @@ const ProfilePage = () => {
           <div className="text-center mt-8">
             <button
               onClick={() => setIsEditing(true)}
-              className={`px-8 py-3 rounded-lg ${
-                darkMode ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "bg-indigo-600 hover:bg-indigo-700 text-white"
-              } transition duration-300`}
+              className="px-8 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition"
             >
               Edit Profile
             </button>
