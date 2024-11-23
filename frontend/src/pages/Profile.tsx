@@ -14,7 +14,6 @@ const ProfilePage = () => {
     email: "",
     addresses: [{ street: "", city: "", state: "", postalCode: "", country: "" }],
   });
-  const [password, setPassword] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -49,7 +48,7 @@ const ProfilePage = () => {
       return;
     }
     try {
-      await updateProfile(formData, password);
+      await updateProfile(formData);
       setFeedbackMessage("Profile updated successfully!");
       setIsEditing(false);
     } catch {
@@ -138,24 +137,6 @@ const ProfilePage = () => {
                 ))}
               </div>
             ))}
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              Password (optional)
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={`w-full p-4 border rounded-lg transition focus:ring-2 ${
-                darkMode
-                  ? "bg-gray-700 border-gray-600 focus:ring-indigo-400 text-gray-200"
-                  : "bg-gray-50 border-gray-300 focus:ring-indigo-500"
-              }`}
-              placeholder="Enter new password if updating"
-            />
           </div>
 
           <div className="flex justify-end gap-4 mt-6">
