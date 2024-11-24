@@ -3,6 +3,7 @@ import Product from '../models/product';
 import logger from '../utils/logger';
 import ErrorResponse from '../utils/errorResponse';
 import { SortOrder } from 'mongoose';
+import { ProductCategory } from '../models/product';
 
 // Helper function for async error handling
 const asyncHandler = (fn: any) => (req: Request, res: Response, next: NextFunction) => {
@@ -123,3 +124,24 @@ export const deleteProduct = asyncHandler(async (req: Request, res: Response) =>
     res.status(500).json(new ErrorResponse('Server error, unable to delete product', 500));
   }
 });
+
+export const getProductCategories = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    if (!ProductCategory) {
+      throw new Error('ProductCategory enum is not defined');
+    }
+
+    const categories = Object.values(ProductCategory);
+    logger.info(`Fetched product categories: ${categories}`);
+    res.status(200).json({ success: true, categories });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unexpected error';
+    logger.error(`Error fetching product categories: ${errorMessage}`);
+    res.status(500).json({
+      success: false,
+      message: 'Server error, unable to fetch product categories',
+      error: errorMessage,
+    });
+  }
+});
+

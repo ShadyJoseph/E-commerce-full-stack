@@ -2,15 +2,22 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { HiChevronDown, HiChevronUp } from 'react-icons/hi';
 import { useThemeStore } from '../stores/themeStore';
+import useProductStore from '../stores/productStore'; // Import the product store to fetch categories
 
 const Categories: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { darkMode } = useThemeStore();
+  const { categories, fetchCategories, loading, error } = useProductStore(); // Fetch categories from the store
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prevState) => !prevState);
   };
+
+  // Fetch categories when the component mounts
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -52,20 +59,26 @@ const Categories: React.FC = () => {
               : 'bg-white border-gray-200 text-gray-800'
           }`}
         >
-          {['Men', 'Women', 'Kids'].map((category) => (
-            <Link
-              key={category}
-              to={`/${category.toLowerCase()}`}
-              className={`block px-4 py-2 text-lg font-semibold transition-colors duration-300 ${
-                darkMode
-                  ? 'hover:bg-gray-700 hover:text-gray-50'
-                  : 'hover:bg-gray-100 hover:text-gray-900'
-              }`}
-              aria-label={category}
-            >
-              {category}
-            </Link>
-          ))}
+          {loading ? (
+            <div className="px-4 py-2 text-gray-500">Loading...</div>
+          ) : error ? (
+            <div className="px-4 py-2 text-red-500">{error}</div>
+          ) : (
+            categories.map((category) => (
+              <Link
+                key={category}
+                to={`/${category.toLowerCase()}`}
+                className={`block px-4 py-2 text-lg font-semibold transition-colors duration-300 ${
+                  darkMode
+                    ? 'hover:bg-gray-700 hover:text-gray-50'
+                    : 'hover:bg-gray-100 hover:text-gray-900'
+                }`}
+                aria-label={category}
+              >
+                {category}
+              </Link>
+            ))
+          )}
         </div>
       )}
     </div>
