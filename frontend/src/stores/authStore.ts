@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '../api/axiosConfig';
 import { getAuthToken, setAuthToken, removeAuthToken } from '../api/auth';
-import { useUserProfileStore } from './useProfileStore';
 
 interface User {
   id: string;
@@ -34,7 +33,6 @@ export const useAuthStore = create<AuthState>()(
       token: getAuthToken(),
       isAuthenticated: !!getAuthToken(),
 
-      // Login with email and password
       login: async (email, password) => {
         try {
           const { data } = await api.post('/auth/login', { email, password });
@@ -42,9 +40,6 @@ export const useAuthStore = create<AuthState>()(
 
           get().setAuthToken(token); // Save token and update headers
           set({ user, isAuthenticated: true });
-
-          // Fetch and sync user profile
-          await useUserProfileStore.getState().getProfile();
           return true;
         } catch (error: any) {
           console.error('Login failed:', handleError(error));
@@ -52,14 +47,12 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      // Redirect to Google OAuth login
       googleLogin: () => {
         const redirectUri = `${process.env.REACT_APP_FRONTEND_URL}/google/callback`;
         const authUrl = `${process.env.REACT_APP_API_URL}/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
         window.location.href = authUrl;
       },
 
-      // Signup with email, password, and displayName
       signUp: async (email, password, displayName) => {
         try {
           const { data } = await api.post('/auth/signup', { email, password, displayName });
@@ -67,9 +60,6 @@ export const useAuthStore = create<AuthState>()(
 
           get().setAuthToken(token); // Save token and update headers
           set({ user, isAuthenticated: true });
-
-          // Fetch and sync user profile
-          await useUserProfileStore.getState().getProfile();
           return true;
         } catch (error: any) {
           console.error('Signup failed:', handleError(error));
@@ -77,17 +67,13 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      // Logout the user and clear all data
       logout: async () => {
         try {
           await api.post('/auth/logout');
 
-          // Clear stores and remove token
+          // Clear all stored data
           useAuthStore.persist.clearStorage();
           removeAuthToken();
-          useUserProfileStore.getState().clearProfile();
-          delete api.defaults.headers.common['Authorization'];
-
           set({ user: null, token: null, isAuthenticated: false });
         } catch (error: any) {
           console.error('Logout failed:', handleError(error));
@@ -95,22 +81,18 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      // Set and persist auth token
       setAuthToken: (token: string) => {
-        setAuthToken(token); // Save token to storage
-        api.defaults.headers.common['Authorization'] = token
-          ? `Bearer ${token}`
-          : undefined;
+        setAuthToken(token); // Save token
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         set({ token, isAuthenticated: !!token });
       },
 
-      // Set user data
       setUser: (user: User) => {
         set({ user });
       },
     }),
     {
-      name: 'auth-storage', // Key in localStorage
+      name: 'auth-storage',
       storage: {
         getItem: (name) => {
           const item = localStorage.getItem(name);
@@ -122,15 +104,6 @@ export const useAuthStore = create<AuthState>()(
         removeItem: (name) => {
           localStorage.removeItem(name);
         },
-      },
-      // Rehydrate store and set headers
-      onRehydrateStorage: () => (state) => {
-        if (state?.token) {
-          api.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
-          useUserProfileStore.getState().getProfile().catch((error) => {
-            console.error('Error fetching profile during rehydration:', handleError(error));
-          });
-        }
       },
     }
   )

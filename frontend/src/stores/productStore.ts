@@ -2,10 +2,6 @@ import api from '../api/axiosConfig';
 import { create } from 'zustand';
 import { persist, PersistOptions } from 'zustand/middleware';
 
-interface ProductCategory {
-  name: string;
-}
-
 interface Product {
   id: string;
   name: string;
@@ -33,7 +29,19 @@ interface ProductStore {
   fetchAllProducts: () => Promise<void>;
 }
 
-// Define persist options to type the middleware correctly
+const customStorage = {
+  getItem: (key: string) => {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : null;
+  },
+  setItem: (key: string, value: any) => {
+    localStorage.setItem(key, JSON.stringify(value));
+  },
+  removeItem: (key: string) => {
+    localStorage.removeItem(key);
+  },
+};
+
 const useProductStore = create<ProductStore, [['zustand/persist', ProductStore]]>(
   persist(
     (set) => ({
@@ -42,7 +50,6 @@ const useProductStore = create<ProductStore, [['zustand/persist', ProductStore]]
       loading: false,
       error: null,
 
-      // Fetch product categories
       fetchCategories: async () => {
         set({ loading: true, error: null });
         try {
@@ -53,7 +60,6 @@ const useProductStore = create<ProductStore, [['zustand/persist', ProductStore]]
         }
       },
 
-      // Fetch all products
       fetchAllProducts: async () => {
         set({ loading: true, error: null });
         try {
@@ -65,19 +71,8 @@ const useProductStore = create<ProductStore, [['zustand/persist', ProductStore]]
       },
     }),
     {
-      name: 'product-store', // Key for localStorage
-      storage: {
-        getItem: (key) => {
-          const storedValue = localStorage.getItem(key);
-          return storedValue ? JSON.parse(storedValue) : null;
-        },
-        setItem: (key, value) => {
-          localStorage.setItem(key, JSON.stringify(value));
-        },
-        removeItem: (key) => {
-          localStorage.removeItem(key);
-        },
-      }, // Custom storage with serialization/deserialization
+      name: 'product-store',
+      storage: customStorage, // Use custom storage wrapper
     } as PersistOptions<ProductStore>
   )
 );

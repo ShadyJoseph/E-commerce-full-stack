@@ -135,7 +135,7 @@ export const getProductCategories = asyncHandler(async (req: Request, res: Respo
     logger.info(`Fetched product categories: ${categories}`);
     res.status(200).json({ success: true, categories });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unexpected error';
+    const errorMessage = error instanceof Error ? error.message : 'Unexpected error'; // Type check for error
     logger.error(`Error fetching product categories: ${errorMessage}`);
     res.status(500).json({
       success: false,
@@ -144,4 +144,3 @@ export const getProductCategories = asyncHandler(async (req: Request, res: Respo
     });
   }
 });
-

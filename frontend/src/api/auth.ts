@@ -28,7 +28,6 @@ export const removeAuthToken = (): void => {
   }
 };
 
-
 export const redirectToSignIn = (redirectPath = '/'): void => {
   localStorage.removeItem('user');
   removeAuthToken();

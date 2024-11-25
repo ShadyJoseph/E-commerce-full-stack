@@ -2,23 +2,25 @@ import React, { useState } from 'react';
 import { FiLogOut } from 'react-icons/fi';
 import ConfirmationModal from './ConfirmationModal';
 import { useAuthStore } from '../stores/authStore';
-
+import api from '../api/axiosConfig';
 const LogoutButton: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { logout } = useAuthStore();
 
-  const handleLogout = async () => {
-    setIsLoading(true);
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout failed:', error);
-    } finally {
-      setIsLoading(false);
-      setIsModalOpen(false);
-    }
-  };
+const handleLogout = async () => {
+  setIsLoading(true);
+  try {
+    await api.post('/auth/logout');
+  } catch (error) {
+    console.error('Logout failed or token expired:', error);
+  } finally {
+    useAuthStore.getState().logout(); // Ensure the logout logic is executed regardless
+    setIsLoading(false);
+    setIsModalOpen(false);
+  }
+};
+
 
   return (
     <>
