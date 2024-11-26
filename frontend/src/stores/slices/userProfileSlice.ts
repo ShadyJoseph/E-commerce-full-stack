@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '../../api/axiosConfig';
+import { extractErrorMessage } from '../../utils/errorHandler'; // Utility for error handling
 
 export interface Address {
   street: string;
@@ -18,84 +19,87 @@ export interface UserProfile {
   wishlist: string[];
 }
 
-interface UserProfileState {
+export interface UserProfileState {
   profile: UserProfile | null;
   loading: boolean;
   error: string | null;
 }
+// Initial State
+const initialState: UserProfileState = {
+  profile: null,
+  loading: false,
+  error: null,
+};
 
 // Async Thunks for API calls
-export const getProfile = createAsyncThunk(
+export const getProfile = createAsyncThunk<UserProfile, void, { rejectValue: string }>(
   'userProfile/getProfile',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/users/profile');
-      return response.data.user;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || error.message || 'An error occurred');
+      const { data } = await api.get('/users/profile');
+      return data.user;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error, 'Failed to fetch user profile.'));
     }
   }
 );
 
-export const updateProfile = createAsyncThunk(
+export const updateProfile = createAsyncThunk<UserProfile, Partial<UserProfile> & { password?: string }, { rejectValue: string }>(
   'userProfile/updateProfile',
-  async (data: Partial<UserProfile> & { password?: string }, { rejectWithValue }) => {
+  async (data, { rejectWithValue }) => {
     try {
-      const payload = data.password ? { ...data, password: data.password } : data;
-      const response = await api.put('/users/profile', payload);
-      return response.data.user;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || error.message || 'An error occurred');
+      const { password, ...rest } = data;
+      const payload = password ? { ...rest, password } : rest;
+      const { data: response } = await api.put('/users/profile', payload);
+      return response.user;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error, 'Failed to update user profile.'));
     }
   }
 );
 
-export const addAddress = createAsyncThunk(
+export const addAddress = createAsyncThunk<UserProfile, Address, { rejectValue: string; state: { userProfile: UserProfileState } }>(
   'userProfile/addAddress',
-  async (address: Address, { getState, rejectWithValue }) => {
+  async (address, { getState, rejectWithValue }) => {
     try {
-      const currentProfile = (getState() as { userProfile: UserProfileState }).userProfile.profile;
+      const currentProfile = getState().userProfile.profile;
       const updatedAddresses = [...(currentProfile?.addresses || []), address];
-      const response = await api.put('/users/profile', { addresses: updatedAddresses });
-      return response.data.user;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || error.message || 'An error occurred');
+      const { data } = await api.put('/users/profile', { addresses: updatedAddresses });
+      return data.user;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error, 'Failed to add address.'));
     }
   }
 );
 
-export const removeAddress = createAsyncThunk(
+export const removeAddress = createAsyncThunk<UserProfile, number, { rejectValue: string; state: { userProfile: UserProfileState } }>(
   'userProfile/removeAddress',
-  async (index: number, { getState, rejectWithValue }) => {
+  async (index, { getState, rejectWithValue }) => {
     try {
-      const currentProfile = (getState() as { userProfile: UserProfileState }).userProfile.profile;
+      const currentProfile = getState().userProfile.profile;
       const updatedAddresses = currentProfile?.addresses.filter((_, i) => i !== index) || [];
-      const response = await api.put('/users/profile', { addresses: updatedAddresses });
-      return response.data.user;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || error.message || 'An error occurred');
+      const { data } = await api.put('/users/profile', { addresses: updatedAddresses });
+      return data.user;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error, 'Failed to remove address.'));
     }
-  }
-);
-
-export const clearProfile = createAsyncThunk(
-  'userProfile/clearProfile',
-  async (_, { rejectWithValue }) => {
-    return null;
   }
 );
 
 const userProfileSlice = createSlice({
   name: 'userProfile',
-  initialState: {
-    profile: null,
-    loading: false,
-    error: null,
-  } as UserProfileState,
-  reducers: {},
+  initialState,
+  reducers: {
+    // Simple reducer for clearing the profile
+    clearProfile(state) {
+      state.profile = null;
+      state.loading = false;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
-      // Get profile
+      // Get Profile
       .addCase(getProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -104,12 +108,12 @@ const userProfileSlice = createSlice({
         state.profile = action.payload;
         state.loading = false;
       })
-      .addCase(getProfile.rejected, (state, action: PayloadAction<any>) => {
-        state.error = action.payload;
+      .addCase(getProfile.rejected, (state, action: PayloadAction<string | undefined>) => {
+        state.error = action.payload || 'An unexpected error occurred.';
         state.loading = false;
       })
 
-      // Update profile
+      // Update Profile
       .addCase(updateProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -118,12 +122,12 @@ const userProfileSlice = createSlice({
         state.profile = action.payload;
         state.loading = false;
       })
-      .addCase(updateProfile.rejected, (state, action: PayloadAction<any>) => {
-        state.error = action.payload;
+      .addCase(updateProfile.rejected, (state, action: PayloadAction<string | undefined>) => {
+        state.error = action.payload || 'An unexpected error occurred.';
         state.loading = false;
       })
 
-      // Add address
+      // Add Address
       .addCase(addAddress.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -132,12 +136,12 @@ const userProfileSlice = createSlice({
         state.profile = action.payload;
         state.loading = false;
       })
-      .addCase(addAddress.rejected, (state, action: PayloadAction<any>) => {
-        state.error = action.payload;
+      .addCase(addAddress.rejected, (state, action: PayloadAction<string | undefined>) => {
+        state.error = action.payload || 'An unexpected error occurred.';
         state.loading = false;
       })
 
-      // Remove address
+      // Remove Address
       .addCase(removeAddress.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -146,18 +150,12 @@ const userProfileSlice = createSlice({
         state.profile = action.payload;
         state.loading = false;
       })
-      .addCase(removeAddress.rejected, (state, action: PayloadAction<any>) => {
-        state.error = action.payload;
+      .addCase(removeAddress.rejected, (state, action: PayloadAction<string | undefined>) => {
+        state.error = action.payload || 'An unexpected error occurred.';
         state.loading = false;
-      })
-
-      // Clear profile
-      .addCase(clearProfile.fulfilled, (state) => {
-        state.profile = null;
-        state.loading = false;
-        state.error = null;
       });
   },
 });
 
+export const { clearProfile } = userProfileSlice.actions;
 export default userProfileSlice.reducer;

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '../../api/axiosConfig';
-
-interface Product {
+import { extractErrorMessage } from '../../utils/errorHandler';
+export interface Product {
   id: string;
   name: string;
   description: string;
@@ -13,18 +13,18 @@ interface Product {
   season?: string;
   gender?: 'men' | 'women' | 'unisex';
   colors: Array<{
-    color: string;
-    availableSizes: Array<{ size: string; stock: number }>;
+      color: string;
+      availableSizes: Array<{ size: string; stock: number }>;
   }>;
 }
 
-interface ProductState {
+export interface ProductState {
   categories: string[];
   products: Product[];
   loading: boolean;
   error: string | null;
 }
-
+// Initial State
 const initialState: ProductState = {
   categories: [],
   products: [],
@@ -37,10 +37,10 @@ export const fetchCategories = createAsyncThunk<string[], void, { rejectValue: s
   'products/fetchCategories',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('products/categories');
-      return response.data.categories || []; // Fallback if no categories are returned
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to fetch categories');
+      const { data } = await api.get('/products/categories');
+      return data.categories || []; // Fallback if no categories are returned
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error, 'Failed to fetch categories.'));
     }
   }
 );
@@ -49,10 +49,22 @@ export const fetchAllProducts = createAsyncThunk<Product[], void, { rejectValue:
   'products/fetchAllProducts',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/products');
-      return response.data.products || []; // Fallback if no products are returned
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to fetch products');
+      const { data } = await api.get('/products');
+      return data.products || []; // Fallback if no products are returned
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error, 'Failed to fetch products.'));
+    }
+  }
+);
+
+export const fetchProductsByCategory = createAsyncThunk<Product[], string, { rejectValue: string }>(
+  'products/fetchProductsByCategory',
+  async (category, { rejectWithValue }) => {
+    try {
+      const { data } = await api.get(`/products?category=${encodeURIComponent(category)}`);
+      return data.products || []; // Fallback if no products are returned
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error, `Failed to fetch products for category: ${category}.`));
     }
   }
 );
@@ -60,7 +72,14 @@ export const fetchAllProducts = createAsyncThunk<Product[], void, { rejectValue:
 const productSlice = createSlice({
   name: 'products',
   initialState,
-  reducers: {},
+  reducers: {
+    // Optional: Add reducers for managing local state (e.g., filter management)
+    clearProductState(state) {
+      state.products = [];
+      state.error = null;
+      state.loading = false;
+    },
+  },
   extraReducers: (builder) => {
     builder
       // Fetch Categories
@@ -73,7 +92,7 @@ const productSlice = createSlice({
         state.loading = false;
       })
       .addCase(fetchCategories.rejected, (state, action) => {
-        state.error = action.payload || 'An unexpected error occurred while fetching categories.';
+        state.error = action.payload || 'An error occurred while fetching categories.';
         state.loading = false;
       })
 
@@ -87,10 +106,25 @@ const productSlice = createSlice({
         state.loading = false;
       })
       .addCase(fetchAllProducts.rejected, (state, action) => {
-        state.error = action.payload || 'An unexpected error occurred while fetching products.';
+        state.error = action.payload || 'An error occurred while fetching products.';
+        state.loading = false;
+      })
+
+      // Fetch Products by Category
+      .addCase(fetchProductsByCategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchProductsByCategory.fulfilled, (state, action: PayloadAction<Product[]>) => {
+        state.products = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchProductsByCategory.rejected, (state, action) => {
+        state.error = action.payload || 'An error occurred while fetching products by category.';
         state.loading = false;
       });
   },
 });
 
+export const { clearProductState } = productSlice.actions;
 export default productSlice.reducer;

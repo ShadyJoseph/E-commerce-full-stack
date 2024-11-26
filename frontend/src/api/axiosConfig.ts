@@ -1,7 +1,11 @@
 import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { store } from '../stores/store';  // Import store here instead of accessing it directly in the interceptor
 import { clearAuthState } from '../stores/slices/authSlice';
 import { removeAuthToken } from './auth';
+
+let store: any; // Declare a variable to hold the store reference
+export const setStore = (reduxStore: any) => {
+  store = reduxStore; // Assign the store dynamically
+};
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
@@ -15,7 +19,7 @@ const api = axios.create({
 // Request Interceptor
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Get token from Redux state directly in the interceptor
+    if (!store) return config; // Skip if store isn't initialized yet
     const state = store.getState();
     const token = state.auth.token; // Access token from Redux state
     if (token) {
@@ -43,7 +47,7 @@ api.interceptors.response.use(
 
     if (status === 401) {
       console.warn('[API] Unauthorized request. Logging out user.');
-      store.dispatch(clearAuthState());
+      if (store) store.dispatch(clearAuthState());
       removeAuthToken();
       const redirectPath = process.env.REACT_APP_SIGNIN_PATH || '/signin';
       window.location.href = redirectPath;

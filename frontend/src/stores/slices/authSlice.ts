@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '../../api/axiosConfig';
-import { getAuthToken, setAuthToken, removeAuthToken } from '../../api/auth';
+import { setAuthToken, removeAuthToken } from '../../api/auth';
+import { extractErrorMessage } from '../../utils/errorHandler';
 
 interface User {
   id: string;
@@ -19,8 +20,8 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
-  token: getAuthToken(),
-  isAuthenticated: !!getAuthToken(),
+  token: null,
+  isAuthenticated: false,
   loading: false,
   error: null,
 };
@@ -33,11 +34,10 @@ export const login = createAsyncThunk<
 >('auth/login', async ({ email, password }, { rejectWithValue }) => {
   try {
     const { data } = await api.post('/auth/login', { email, password });
-    setAuthToken(data.token); // Save token to cookies
-    return data; // Expecting { user, token }
-  } catch (error: any) {
-    const message = error.response?.data?.message || 'Failed to log in.';
-    return rejectWithValue(message);
+    setAuthToken(data.token); // Save token to headers or cookies
+    return data; // { user, token }
+  } catch (error) {
+    return rejectWithValue(extractErrorMessage(error, 'Failed to log in.'));
   }
 });
 
@@ -48,11 +48,10 @@ export const signUp = createAsyncThunk<
 >('auth/signUp', async ({ email, password, displayName }, { rejectWithValue }) => {
   try {
     const { data } = await api.post('/auth/signup', { email, password, displayName });
-    setAuthToken(data.token); // Save token to cookies
-    return data; // Expecting { user, token }
-  } catch (error: any) {
-    const message = error.response?.data?.message || 'Failed to sign up.';
-    return rejectWithValue(message);
+    setAuthToken(data.token); // Save token to headers or cookies
+    return data; // { user, token }
+  } catch (error) {
+    return rejectWithValue(extractErrorMessage(error, 'Failed to sign up.'));
   }
 });
 
@@ -61,10 +60,9 @@ export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
   async (_, { rejectWithValue }) => {
     try {
       await api.post('/auth/logout');
-      removeAuthToken(); // Assuming this removes the JWT token from localStorage or cookies
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to log out.';
-      return rejectWithValue(message);
+      removeAuthToken(); // Clear token from headers or cookies
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error, 'Failed to log out.'));
     }
   }
 );
@@ -74,15 +72,17 @@ export const googleLogin = createAsyncThunk<void, void, { rejectValue: string }>
   async (_, { rejectWithValue }) => {
     try {
       const redirectUri = `${process.env.REACT_APP_FRONTEND_URL}/google/callback`;
-      const authUrl = `${process.env.REACT_APP_API_URL}/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
+      const authUrl = `${process.env.REACT_APP_API_URL}/auth/google?redirect_uri=${encodeURIComponent(
+        redirectUri
+      )}`;
       window.location.href = authUrl; // Redirect to the OAuth URL
     } catch (error) {
-      console.error('[Auth] Failed to redirect to Google login:', error);
-      return rejectWithValue('Failed to initiate Google login');
+      return rejectWithValue('Failed to initiate Google login.');
     }
   }
 );
 
+// Auth Slice
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -128,13 +128,18 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload || 'Unexpected error occurred.';
       })
+      .addCase(logout.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(logout.fulfilled, (state) => {
+        state.loading = false;
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
-        state.loading = false;
       })
       .addCase(logout.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload || 'Failed to log out.';
       })
       .addCase(googleLogin.rejected, (state, action) => {
