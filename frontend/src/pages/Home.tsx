@@ -1,18 +1,20 @@
 import React, { useEffect, useMemo } from 'react';
-import useProductStore from '../stores/productStore';
-import { useThemeStore } from '../stores/themeStore';
+import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
+import { fetchCategories } from '../stores/slices/productSlice';
 
 const HomeScreen: React.FC = () => {
-  const fetchCategories = useProductStore((state) => state.fetchCategories);
-  const categories = useProductStore((state) => state.categories);
-  const loading = useProductStore((state) => state.loading);
-  const error = useProductStore((state) => state.error);
-  const darkMode = useThemeStore((state) => state.darkMode);
+  const dispatch = useAppDispatch();
+  const { categories, loading, error } = useAppSelector((state) => state.products); // Access state from the product slice
+  const darkMode = useAppSelector((state: { theme: { darkMode: boolean } }) => state.theme.darkMode);
 
+  // Fetch categories using Redux
   useEffect(() => {
-    if (categories.length === 0) fetchCategories();
-  }, [fetchCategories, categories]);
+    if (categories.length === 0 && !loading) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, categories, loading]);
 
+  // Render category cards dynamically
   const categoryCards = useMemo(
     () =>
       categories.map((category, index) => (

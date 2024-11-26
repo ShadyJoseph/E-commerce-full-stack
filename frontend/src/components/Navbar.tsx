@@ -5,15 +5,17 @@ import { HiOutlineMenuAlt3, HiOutlineX } from 'react-icons/hi';
 import Logo from '../assets/Logo.png';
 import ThemeToggleButton from './ThemeToggleButton';
 import LogoutButton from './LogoutButton';
-import { useThemeStore } from '../stores/themeStore';
-import { useAuthStore } from '../stores/authStore';
 import MobileMenu from './MobileMenu';
 import Categories from './fullScreenCategories';
+import { useAppSelector } from '../hooks/reduxHooks';
+import { RootState } from '../stores/store'; // assuming the root state is exported from the store
 
 const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { darkMode } = useThemeStore();
-  const { isAuthenticated } = useAuthStore();
+  
+  // Using Redux hooks to access the theme and authentication state
+  const darkMode = useAppSelector((state: RootState) => state.theme.darkMode); // Accessing darkMode state from Redux
+  const isAuthenticated = useAppSelector((state: RootState) => state.auth.isAuthenticated); // Accessing authentication state from Redux
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen((prevState) => !prevState);
@@ -36,7 +38,13 @@ const Navbar: React.FC = () => {
               </span>
             </Link>
           </div>
-
+          <Link
+            to="/signup"
+            className="font-medium text-lg hover:text-primaryColor"
+            aria-label="Register"
+          >
+            Register
+          </Link>
           {/* Desktop Categories */}
           <div className="hidden md:flex items-center space-x-4">
             <Categories />

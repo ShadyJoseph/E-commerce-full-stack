@@ -1,10 +1,12 @@
 import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { getAuthToken, redirectToSignIn } from './auth';
-import { useAuthStore } from '../stores/authStore';
+import { store } from '../stores/store';  // Import store here instead of accessing it directly in the interceptor
+import { clearAuthState } from '../stores/slices/authSlice';
+import { removeAuthToken } from './auth';
+
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
   withCredentials: true,
-  timeout: 15000, // Timeout after 15 seconds
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -13,7 +15,9 @@ const api = axios.create({
 // Request Interceptor
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = getAuthToken();
+    // Get token from Redux state directly in the interceptor
+    const state = store.getState();
+    const token = state.auth.token; // Access token from Redux state
     if (token) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
@@ -21,7 +25,7 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('Request interceptor error:', error);
+    console.error('[API] Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -31,24 +35,19 @@ api.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error) => {
     const status = error.response?.status;
-    const errorMessage = error.response?.data?.message || error.message;
-
-    if (status === 401) {
-      if (errorMessage === 'Token expired, please log in again') {
-        console.warn('Token expired. Logging out user.');
-        const authStore = useAuthStore.getState(); // Access Zustand store
-        authStore.logout(); // Call logout to clear state
-      } else {
-        console.warn('Unauthorized request. Redirecting to sign-in.');
-        redirectToSignIn();
-      }
-    } else if (status === 403) {
-      console.error('Access denied. Redirecting to sign-in.');
-      redirectToSignIn();
+    if (!error.response) {
+      console.error('[API] Network/Client error:', error.message);
     } else {
-      console.error('API error:', error);
+      console.error('[API] Server error:', error.response.data || error.message);
     }
 
+    if (status === 401) {
+      console.warn('[API] Unauthorized request. Logging out user.');
+      store.dispatch(clearAuthState());
+      removeAuthToken();
+      const redirectPath = process.env.REACT_APP_SIGNIN_PATH || '/signin';
+      window.location.href = redirectPath;
+    }
     return Promise.reject(error);
   }
 );

@@ -1,20 +1,24 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useThemeStore } from '../stores/themeStore';
-import useProductStore from '../stores/productStore'; // Import product store to fetch categories
-
+import { RootState } from '../stores/store';
+import { fetchCategories, } from '../stores/slices/productSlice'; // Import the product slice to fetch categories
+import { useAppSelector,useAppDispatch } from '../hooks/reduxHooks';
 interface CategoriesMenuProps {
   onClick?: () => void;
   isMobile?: boolean;
 }
 
 const CategoriesMenu: React.FC<CategoriesMenuProps> = ({ onClick, isMobile = false }) => {
-  const { darkMode } = useThemeStore(); // Access the theme state
-  const { categories, fetchCategories, loading, error } = useProductStore(); // Fetch categories from the store
+  const dispatch = useAppDispatch();
+  const darkMode = useAppSelector((state: RootState) => state.theme.darkMode); // Access the theme state from Redux
+  const { categories, loading, error } = useAppSelector((state) => state.products); // Access product state from Redux
 
+  // Fetch categories using Redux
   useEffect(() => {
-    fetchCategories(); // Fetch categories when the component mounts
-  }, [fetchCategories]);
+    if (categories.length === 0 && !loading) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, categories, loading]);
 
   return (
     <div className={isMobile ? 'flex flex-col items-center space-y-8 mt-6' : 'flex space-x-4'}>

@@ -1,11 +1,11 @@
 import React from "react";
 import { IoMail, IoLocationSharp } from "react-icons/io5";
 import { FaInstagram, FaFacebook, FaTiktok } from "react-icons/fa";
-import { useThemeStore } from "../stores/themeStore";
+import { useAppSelector } from "../hooks/reduxHooks";
 
 const Footer: React.FC = () => {
-  const { darkMode } = useThemeStore();
-
+  
+  const darkMode = useAppSelector((state: { theme: { darkMode: boolean } }) => state.theme.darkMode);
   return (
     <footer
       className={` py-6 ${

@@ -1,16 +1,17 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../stores/authStore';
+import { setUser } from '../stores/slices/authSlice'; // Import the actions
+import { setAuthToken } from '../api/auth'; // Auth token helper function
 import Loader from '../components/Loader';
+import { useAppDispatch } from '../hooks/reduxHooks';
 
 const GoogleCallback = () => {
   const navigate = useNavigate();
-  const { setAuthToken, setUser } = useAuthStore();
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(true);
-  const isProcessed = useRef(false);  // Ref to prevent reprocessing
+  const isProcessed = useRef(false); // Ref to prevent reprocessing
 
   useEffect(() => {
-    // Only process if not already done
     if (isProcessed.current) return;
 
     const params = new URLSearchParams(window.location.search);
@@ -22,30 +23,34 @@ const GoogleCallback = () => {
 
     console.log('Callback Params:', { id, email, displayName, role });
 
-    // Only process if all parameters are valid
     if (token && id && email && displayName) {
       try {
         console.log('Before state update:', { token, id, email, displayName, role });
+
+        // Set the token using the setAuthToken helper function
         setAuthToken(token);
-        setUser({ id, email, displayName, role });
-        
+
+        // Dispatch setUser to Redux store
+        dispatch(setUser({ id, email, displayName, role }));
+
         // Mark the processing as completed to prevent multiple triggers
         isProcessed.current = true;
-        console.log('After state update:', { user: useAuthStore.getState().user });
+        console.log('After state update:', { user: id, email, displayName, role });
 
-        // No need for loading once state has been updated
         setLoading(false);
         console.log('Authentication successful, redirecting to home.');
         navigate('/'); // Redirect to homepage after successful authentication
       } catch (error) {
         console.error('Error processing Google callback:', error);
+        setLoading(false);
         navigate('/signin'); // In case of error, navigate to sign-in page
       }
     } else {
       console.error('Invalid or missing callback parameters:', { id, email, displayName, role });
-      navigate(`/error?error=missing_params`);
+      setLoading(false);
+      navigate(`/error?error=missing_params`); // Provide a more user-friendly error page
     }
-  }, [navigate, setAuthToken, setUser]);
+  }, [navigate, dispatch]);
 
   if (loading) {
     return (
@@ -55,7 +60,7 @@ const GoogleCallback = () => {
     );
   }
 
-  return null; // In case of redirection, no need for further rendering
+  return null;
 };
 
 export default GoogleCallback;

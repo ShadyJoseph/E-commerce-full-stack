@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { HiOutlineX } from 'react-icons/hi';
 import { FiUser, FiShoppingCart } from 'react-icons/fi';
 import LogoutButton from './LogoutButton';
-import { useAuthStore } from '../stores/authStore';
-import { useThemeStore } from '../stores/themeStore';
+import { useSelector } from 'react-redux';
+import { RootState } from '../stores/store';
 import CategoriesMenu from './MobileMenuCategories';
 import ThemeToggleButton from './ThemeToggleButton';
 
@@ -14,8 +14,8 @@ interface MobileMenuProps {
 }
 
 const MobileMenu: React.FC<MobileMenuProps> = ({ isMobileMenuOpen, toggleMobileMenu }) => {
-  const { isAuthenticated } = useAuthStore();
-  const { darkMode } = useThemeStore();
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated); // Access auth state from Redux
+  const darkMode = useSelector((state: RootState) => state.theme.darkMode); // Access theme state from Redux
 
   return (
     <>

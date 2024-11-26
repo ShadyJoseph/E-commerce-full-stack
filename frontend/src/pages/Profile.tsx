@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Address, useUserProfileStore } from "../stores/useProfileStore";
-import { useThemeStore } from "../stores/themeStore";
+import { getProfile, updateProfile } from "../stores/slices/userProfileSlice"
+import { RootState } from "../stores/store";
 import Loader from "../components/Loader";
 import { FiUser } from "react-icons/fi";
-
+import { useAppDispatch,useAppSelector } from "../hooks/reduxHooks";
+import { Address } from "../stores/slices/userProfileSlice";
 const ProfilePage = () => {
-  const { profile, getProfile, updateProfile, loading, error } = useUserProfileStore();
-  const { darkMode } = useThemeStore();
+  const dispatch = useAppDispatch();
+  const { profile, loading, error } = useAppSelector(
+    (state: RootState) => state.userProfile
+  );
+  const darkMode = useAppSelector((state: RootState) => state.theme.darkMode);
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -17,8 +21,8 @@ const ProfilePage = () => {
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    getProfile();
-  }, [getProfile]);
+    dispatch(getProfile());
+  }, [dispatch]);
 
   useEffect(() => {
     if (profile) {
@@ -48,7 +52,7 @@ const ProfilePage = () => {
       return;
     }
     try {
-      await updateProfile(formData);
+      await dispatch(updateProfile(formData)).unwrap();
       setFeedbackMessage("Profile updated successfully!");
       setIsEditing(false);
     } catch {

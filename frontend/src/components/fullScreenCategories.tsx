@@ -1,23 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { HiChevronDown, HiChevronUp } from 'react-icons/hi';
-import { useThemeStore } from '../stores/themeStore';
-import useProductStore from '../stores/productStore'; // Import the product store to fetch categories
+import { useAppDispatch,useAppSelector } from '../hooks/reduxHooks';
+import { fetchCategories } from '../stores/slices/productSlice'; // Use the fetchCategories action from the product slice
 
 const Categories: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { darkMode } = useThemeStore();
-  const { categories, fetchCategories, loading, error } = useProductStore(); // Fetch categories from the store
+  const dispatch = useAppDispatch();
+  const darkMode = useAppSelector((state: { theme: { darkMode: boolean } }) => state.theme.darkMode);
+  
+  // Fetch product state from Redux store
+  const { categories, loading, error } = useAppSelector((state: { products: { categories: string[], loading: boolean, error: string | null } }) => state.products);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prevState) => !prevState);
   };
 
-  // Fetch categories when the component mounts
   useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+    if (categories.length === 0 && !loading) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, categories, loading]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -54,9 +59,7 @@ const Categories: React.FC = () => {
       {isDropdownOpen && (
         <div
           className={`absolute left-0 mt-2 w-56 rounded-md shadow-lg border ${
-            darkMode
-              ? 'bg-gray-800 border-gray-700 text-gray-100'
-              : 'bg-white border-gray-200 text-gray-800'
+            darkMode ? 'bg-gray-800 border-gray-700 text-gray-100' : 'bg-white border-gray-200 text-gray-800'
           }`}
         >
           {loading ? (
@@ -69,9 +72,7 @@ const Categories: React.FC = () => {
                 key={category}
                 to={`/${category.toLowerCase()}`}
                 className={`block px-4 py-2 text-lg font-semibold transition-colors duration-300 ${
-                  darkMode
-                    ? 'hover:bg-gray-700 hover:text-gray-50'
-                    : 'hover:bg-gray-100 hover:text-gray-900'
+                  darkMode ? 'hover:bg-gray-700 hover:text-gray-50' : 'hover:bg-gray-100 hover:text-gray-900'
                 }`}
                 aria-label={category}
               >
@@ -81,6 +82,7 @@ const Categories: React.FC = () => {
           )}
         </div>
       )}
+
     </div>
   );
 };

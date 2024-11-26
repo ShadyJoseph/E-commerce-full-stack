@@ -1,10 +1,10 @@
 import React from "react";
-import { useThemeStore } from "../stores/themeStore";
+import { useAppSelector } from "../hooks/reduxHooks";
 import { useNavigate } from "react-router-dom";
 import { AiOutlineWarning } from "react-icons/ai"; // Use a warning icon for errors
 
 const ErrorPage: React.FC = () => {
-  const { darkMode } = useThemeStore((state) => state);
+  const darkMode = useAppSelector((state: { theme: { darkMode: boolean } }) => state.theme.darkMode);
   const navigate = useNavigate();
 
   return (

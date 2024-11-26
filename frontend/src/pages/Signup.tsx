@@ -3,16 +3,17 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Formik, Form } from 'formik';
 import Loader from '../components/Loader';
 import GoogleSignInButton from '../components/GoogleSignInButton';
-import { useAuthStore } from '../stores/authStore';
-import { useThemeStore } from '../stores/themeStore';
 import InputField from '../components/InputField';
 import ValidationSchema from '../components/SignUpValidations';
+import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks'
+import { signUp } from '../stores/slices/authSlice';
 
-const SignUp = () => {
+const SignUp: React.FC = () => {
   const navigate = useNavigate();
-  const { darkMode } = useThemeStore();
-  const signUp = useAuthStore((state) => state.signUp);
-  const googleLogin = useAuthStore((state) => state.googleLogin);
+  const dispatch = useAppDispatch();
+
+  const { darkMode } = useAppSelector((state) => state.theme); // Theme state from Redux
+  const { loading: isSubmitting } = useAppSelector((state) => state.auth); // Auth state from Redux
 
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
@@ -22,18 +23,27 @@ const SignUp = () => {
     { setSubmitting, setFieldError }: { setSubmitting: (isSubmitting: boolean) => void; setFieldError: (field: string, message: string) => void }
   ) => {
     try {
-      const success = await signUp(values.email, values.password, values.displayName);
-      if (success) navigate('/home');
+      const resultAction = await dispatch(signUp({ email: values.email, password: values.password, displayName: values.displayName }));
+      if (signUp.fulfilled.match(resultAction)) {
+        navigate('/home');
+      } else if (signUp.rejected.match(resultAction) && resultAction.payload) {
+        setFieldError('submit', resultAction.payload);
+      } else {
+        setFieldError('submit', 'Unexpected error occurred.');
+      }
     } catch (error) {
-      setFieldError('submit', (error as Error)?.message || 'Failed to sign up');
+      console.error('[SignUp] Sign-up error:', error);
+      setFieldError('submit', 'An error occurred. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
+  
 
   const handleGoogleSignIn = () => {
     setIsGoogleSigningIn(true);
-    googleLogin();
+    // Assuming Google login is also handled via Redux thunk or similar
+    window.location.href = `${process.env.REACT_APP_API_URL}/auth/google`;
   };
 
   return (
@@ -46,7 +56,7 @@ const SignUp = () => {
           validationSchema={ValidationSchema}
           onSubmit={handleUserSignup}
         >
-          {({ isSubmitting, errors, touched }) => (
+          {({ errors }) => (
             <Form className="space-y-6">
               {errors.submit && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert" aria-live="assertive">
@@ -74,7 +84,7 @@ const SignUp = () => {
               <InputField
                 id="password"
                 label="Password:"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 showToggle={showPassword}
                 toggleVisibility={() => setShowPassword(!showPassword)}
                 disabled={isSubmitting || isGoogleSigningIn}

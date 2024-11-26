@@ -1,5 +1,6 @@
 import React from 'react';
-import { useThemeStore } from '../stores/themeStore'; // Import theme store
+import { useSelector } from 'react-redux';
+import { RootState } from '../stores/store'; // Import RootState
 import Loader from './Loader';
 
 interface GoogleSignInButtonProps {
@@ -9,8 +10,8 @@ interface GoogleSignInButtonProps {
 }
 
 const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ isLoading, onClick, mssg }) => {
-  // Access the darkMode state from Zustand store
-  const { darkMode } = useThemeStore((state) => state);
+  // Access the darkMode state from Redux store
+  const darkMode = useSelector((state: RootState) => state.theme.darkMode);
 
   // Conditional class names for the button
   const buttonClasses = `flex items-center justify-center w-full h-12 px-6 text-gray-700 dark:text-gray-200 font-semibold rounded-full border transition-all ${

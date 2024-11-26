@@ -1,10 +1,10 @@
 import React from "react";
-import { useThemeStore } from "../stores/themeStore";
+import { useAppSelector } from "../hooks/reduxHooks";
 import { useNavigate } from "react-router-dom";
 import { AiOutlineQuestionCircle } from "react-icons/ai"; // Import icon
 
 const NotFound: React.FC = () => {
-  const { darkMode } = useThemeStore((state) => state);
+  const darkMode = useAppSelector((state: { theme: { darkMode: boolean } }) => state.theme.darkMode);
   const navigate = useNavigate();
 
   return (

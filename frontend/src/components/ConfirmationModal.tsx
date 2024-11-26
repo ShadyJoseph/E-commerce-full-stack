@@ -1,7 +1,6 @@
 import React from 'react';
 import Loader from './Loader';
-import { useThemeStore } from '../stores/themeStore';
-
+import { useAppSelector } from '../hooks/reduxHooks';
 interface ConfirmationModalProps {
   message: string;
   onConfirm: () => void;
@@ -15,7 +14,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onCancel,
   isLoading,
 }) => {
-  const { darkMode } = useThemeStore((state) => state);
+  const darkMode = useAppSelector((state: { theme: { darkMode: boolean } }) => state.theme.darkMode);
 
   return (
     <div

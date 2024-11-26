@@ -1,7 +1,8 @@
 import React from 'react';
 import { Field, ErrorMessage } from 'formik';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
-import { useThemeStore } from '../stores/themeStore';
+import { useSelector } from 'react-redux';
+import { RootState } from '../stores/store';
 
 interface InputFieldProps {
   id: string;
@@ -14,14 +15,13 @@ interface InputFieldProps {
 
 // Reusable Input Field Component
 const InputField: React.FC<InputFieldProps> = ({ id, label, type, showToggle, toggleVisibility, disabled }) => {
-  const { darkMode } = useThemeStore();
+  const darkMode = useSelector((state: RootState) => state.theme.darkMode); // Access darkMode state from Redux
 
   return (
     <div className="relative mb-4">
       <label
         htmlFor={id}
-        className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-blue-600'
-          }`}
+        className={`block text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-blue-600'}`}
       >
         {label}
       </label>
