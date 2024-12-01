@@ -1,15 +1,16 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setUser } from '../stores/slices/authSlice'; // Import the actions
-import { setAuthToken } from '../api/auth'; // Auth token helper function
+import { setUser } from '../stores/slices/authSlice';
+import { setAuthToken } from '../api/auth';
 import Loader from '../components/Loader';
 import { useAppDispatch } from '../hooks/reduxHooks';
+import { User } from '../stores/slices/authSlice';
 
 const GoogleCallback = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(true);
-  const isProcessed = useRef(false); // Ref to prevent reprocessing
+  const isProcessed = useRef(false);
 
   useEffect(() => {
     if (isProcessed.current) return;
@@ -19,36 +20,27 @@ const GoogleCallback = () => {
     const id = params.get('id');
     const email = params.get('email');
     const displayName = params.get('displayName');
-    const role = params.get('role') || 'user'; // Default role is 'user'
-
-    console.log('Callback Params:', { id, email, displayName, role });
+    const role = params.get('role') || 'user';
 
     if (token && id && email && displayName) {
       try {
-        console.log('Before state update:', { token, id, email, displayName, role });
-
-        // Set the token using the setAuthToken helper function
         setAuthToken(token);
 
-        // Dispatch setUser to Redux store
-        dispatch(setUser({ id, email, displayName, role }));
+        const user: User = { id, email, displayName, role };
+        dispatch(setUser({ user, token }));
 
-        // Mark the processing as completed to prevent multiple triggers
         isProcessed.current = true;
-        console.log('After state update:', { user: id, email, displayName, role });
-
-        setLoading(false);
-        console.log('Authentication successful, redirecting to home.');
-        navigate('/'); // Redirect to homepage after successful authentication
+        navigate('/');
       } catch (error) {
         console.error('Error processing Google callback:', error);
+        navigate('/signin?error=auth_failed');
+      } finally {
         setLoading(false);
-        navigate('/signin'); // In case of error, navigate to sign-in page
       }
     } else {
-      console.error('Invalid or missing callback parameters:', { id, email, displayName, role });
+      console.error('Missing callback parameters');
       setLoading(false);
-      navigate(`/error?error=missing_params`); // Provide a more user-friendly error page
+      navigate(`/error?error=missing_params`);
     }
   }, [navigate, dispatch]);
 

@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '../../api/axiosConfig';
-import { setAuthToken, removeAuthToken } from '../../api/auth';
+import { setAuthToken, removeAuthToken, getAuthToken } from '../../api/auth';
 import { extractErrorMessage } from '../../utils/errorHandler';
 
-interface User {
+export interface User {
   id: string;
   email: string;
   displayName: string;
@@ -19,9 +19,9 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-  user: null,
-  token: null,
-  isAuthenticated: false,
+  user: JSON.parse(localStorage.getItem('user') || 'null'),
+  token: getAuthToken(),
+  isAuthenticated: !!getAuthToken(),
   loading: false,
   error: null,
 };
@@ -34,8 +34,8 @@ export const login = createAsyncThunk<
 >('auth/login', async ({ email, password }, { rejectWithValue }) => {
   try {
     const { data } = await api.post('/auth/login', { email, password });
-    setAuthToken(data.token); // Save token to headers or cookies
-    return data; // { user, token }
+    setAuthToken(data.token); // Save token in cookies and localStorage
+    return data;
   } catch (error) {
     return rejectWithValue(extractErrorMessage(error, 'Failed to log in.'));
   }
@@ -48,8 +48,8 @@ export const signUp = createAsyncThunk<
 >('auth/signUp', async ({ email, password, displayName }, { rejectWithValue }) => {
   try {
     const { data } = await api.post('/auth/signup', { email, password, displayName });
-    setAuthToken(data.token); // Save token to headers or cookies
-    return data; // { user, token }
+    setAuthToken(data.token); // Save token in cookies and localStorage
+    return data;
   } catch (error) {
     return rejectWithValue(extractErrorMessage(error, 'Failed to sign up.'));
   }
@@ -57,15 +57,19 @@ export const signUp = createAsyncThunk<
 
 export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
   'auth/logout',
-  async (_, { rejectWithValue }) => {
+  async (_, { dispatch, rejectWithValue }) => {
     try {
       await api.post('/auth/logout');
-      removeAuthToken(); // Clear token from headers or cookies
     } catch (error) {
-      return rejectWithValue(extractErrorMessage(error, 'Failed to log out.'));
+      console.error('[Auth] Logout failed:', error);
+      return rejectWithValue('Failed to log out.');
+    } finally {
+      // Clear all auth states
+      dispatch(clearAuthState());
     }
   }
 );
+
 
 export const googleLogin = createAsyncThunk<void, void, { rejectValue: string }>(
   'auth/googleLogin',
@@ -75,7 +79,7 @@ export const googleLogin = createAsyncThunk<void, void, { rejectValue: string }>
       const authUrl = `${process.env.REACT_APP_API_URL}/auth/google?redirect_uri=${encodeURIComponent(
         redirectUri
       )}`;
-      window.location.href = authUrl; // Redirect to the OAuth URL
+      window.location.href = authUrl;
     } catch (error) {
       return rejectWithValue('Failed to initiate Google login.');
     }
@@ -87,15 +91,21 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setUser(state, action: PayloadAction<User>) {
-      state.user = action.payload;
+    setUser(state, action: PayloadAction<{ user: User; token: string }>) {
+      const { user, token } = action.payload;
+      state.user = user;
+      state.token = token;
       state.isAuthenticated = true;
+      localStorage.setItem('user', JSON.stringify(user));
+      setAuthToken(token);
     },
     clearAuthState(state) {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
+      localStorage.removeItem('user');
+      removeAuthToken();
     },
   },
   extraReducers: (builder) => {
@@ -105,9 +115,10 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(login.fulfilled, (state, action) => {
+        const { user, token } = action.payload;
         state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.user = user;
+        state.token = token;
         state.isAuthenticated = true;
       })
       .addCase(login.rejected, (state, action) => {
@@ -119,27 +130,25 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(signUp.fulfilled, (state, action) => {
+        const { user, token } = action.payload;
         state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.user = user;
+        state.token = token;
         state.isAuthenticated = true;
       })
       .addCase(signUp.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Unexpected error occurred.';
       })
-      .addCase(logout.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
       .addCase(logout.fulfilled, (state) => {
-        state.loading = false;
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
       })
       .addCase(logout.rejected, (state, action) => {
-        state.loading = false;
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
         state.error = action.payload || 'Failed to log out.';
       })
       .addCase(googleLogin.rejected, (state, action) => {

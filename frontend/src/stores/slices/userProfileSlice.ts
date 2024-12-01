@@ -1,7 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '../../api/axiosConfig';
 import { extractErrorMessage } from '../../utils/errorHandler'; // Utility for error handling
-
+import store from '../store';
+import { clearAuthState } from './authSlice';
 export interface Address {
   street: string;
   city: string;
@@ -31,18 +32,22 @@ const initialState: UserProfileState = {
   error: null,
 };
 
-// Async Thunks for API calls
 export const getProfile = createAsyncThunk<UserProfile, void, { rejectValue: string }>(
   'userProfile/getProfile',
   async (_, { rejectWithValue }) => {
     try {
       const { data } = await api.get('/users/profile');
+      localStorage.setItem('user', JSON.stringify(data.user)); // Save user to localStorage
       return data.user;
-    } catch (error) {
+    } catch (error:any) {
+      if (error.response?.status === 401) {
+        store.dispatch(clearAuthState()); // Handle unauthorized error
+      }
       return rejectWithValue(extractErrorMessage(error, 'Failed to fetch user profile.'));
     }
   }
 );
+
 
 export const updateProfile = createAsyncThunk<UserProfile, Partial<UserProfile> & { password?: string }, { rejectValue: string }>(
   'userProfile/updateProfile',

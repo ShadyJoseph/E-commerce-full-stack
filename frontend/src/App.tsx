@@ -25,7 +25,7 @@ function App() {
           <Route path="/google/callback" element={<MainLayout><GoogleCallback /></MainLayout>} />
           <Route path="/signin" element={<NoNavbarLayout><SignIn /></NoNavbarLayout>} />
           <Route path="/signup" element={<NoNavbarLayout><SignUp /></NoNavbarLayout>} />
-          <Route path="/error" element={<NoNavbarLayout><ErrorPage/></NoNavbarLayout>} />
+          <Route path="/error" element={<NoNavbarLayout><ErrorPage /></NoNavbarLayout>} />
           <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
         </Routes>
       </Suspense>

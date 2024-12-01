@@ -6,19 +6,15 @@ import { logout } from '../stores/slices/authSlice'; // Import the logout action
 
 const LogoutButton: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const dispatch = useAppDispatch(); // Use custom dispatch hook
-  const loading = useAppSelector((state) => state.auth.loading); // Use custom selector hook
+  const dispatch = useAppDispatch();
+  const loading = useAppSelector((state) => state.auth.loading);
 
   const handleLogout = async () => {
-    setIsLoading(true);
     try {
-      await dispatch(logout()).unwrap(); // Dispatch the logout action and wait for completion
-    } catch (error: any) {  // Explicitly type error as `any`
-      console.error('Logout failed:', error);
-    } finally {
-      setIsLoading(false);
+      await dispatch(logout()).unwrap();
       setIsModalOpen(false);
+    } catch (error) {
+      console.error('Logout failed:', error);
     }
   };
 
@@ -37,11 +33,12 @@ const LogoutButton: React.FC = () => {
           message="Are you sure you want to log out?"
           onConfirm={handleLogout}
           onCancel={() => setIsModalOpen(false)}
-          isLoading={isLoading || loading} // Show loading state from Redux
+          isLoading={loading}
         />
       )}
     </>
   );
 };
+
 
 export default LogoutButton;

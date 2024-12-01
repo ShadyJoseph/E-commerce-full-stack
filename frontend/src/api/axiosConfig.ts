@@ -39,17 +39,11 @@ api.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error) => {
     const status = error.response?.status;
-    if (!error.response) {
-      console.error('[API] Network/Client error:', error.message);
-    } else {
-      console.error('[API] Server error:', error.response.data || error.message);
-    }
-
     if (status === 401) {
       console.warn('[API] Unauthorized request. Logging out user.');
       if (store) store.dispatch(clearAuthState());
       removeAuthToken();
-      const redirectPath = process.env.REACT_APP_SIGNIN_PATH || '/signin';
+      const redirectPath = process.env.REACT_APP_SIGNIN_PATH || '/';
       window.location.href = redirectPath;
     }
     return Promise.reject(error);

@@ -30,7 +30,7 @@ const SignIn: React.FC = () => {
     try {
       const resultAction = await dispatch(login({ email: values.email, password: values.password }));
       if (login.fulfilled.match(resultAction)) {
-        navigate('/home');
+        navigate('/');
       } else if (login.rejected.match(resultAction) && resultAction.payload) {
         setFieldError('submit', resultAction.payload); // Payload contains string error
       } else {
@@ -46,9 +46,10 @@ const SignIn: React.FC = () => {
 
   const handleGoogleSignIn = () => {
     setIsGoogleSigningIn(true);
-    // Assuming Google login is also handled via Redux thunk or similar
-    window.location.href = `${process.env.REACT_APP_API_URL}/auth/google`;
+    const redirectUri = `${process.env.REACT_APP_FRONTEND_URL}/google/callback`;
+    window.location.href = `${process.env.REACT_APP_API_URL}/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
   };
+  
 
   return (
     <div className={`flex flex-col items-center justify-center min-h-screen px-4 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} transition-colors`}>
