@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { fetchCategories } from '../stores/slices/productSlice';
+import { Link } from 'react-router-dom';
 
 const HomeScreen: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -29,7 +30,7 @@ const HomeScreen: React.FC = () => {
               darkMode
                 ? 'bg-gradient-to-r from-indigo-600 via-purple-700 to-pink-600'
                 : 'bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500'
-            } h-56 flex items-center justify-center`}
+            } h-56 flex items-center justify-center rounded-t-lg`}
           >
             <span
               className="text-3xl font-extrabold text-white uppercase tracking-wider"
@@ -59,7 +60,7 @@ const HomeScreen: React.FC = () => {
           darkMode
             ? 'bg-gradient-to-r from-purple-700 via-indigo-600 to-blue-700'
             : 'bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500'
-        } text-white py-28 text-center`}
+        } text-white py-28 text-center shadow-lg`}
       >
         <h1 className="text-5xl font-extrabold mb-6">
           Welcome to <span className="underline decoration-wavy decoration-yellow-300">YourShop</span>
@@ -71,7 +72,7 @@ const HomeScreen: React.FC = () => {
           className="mt-6 px-8 py-4 bg-yellow-400 text-gray-900 rounded-full font-semibold hover:bg-yellow-300 transition duration-300 transform hover:scale-105"
           aria-label="Shop Now"
         >
-          Shop Now
+          <Link to="/allProducts">Shop Now</Link>
         </button>
       </div>
 
