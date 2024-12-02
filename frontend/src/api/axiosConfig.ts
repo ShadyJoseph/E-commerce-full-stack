@@ -1,6 +1,6 @@
 import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { clearAuthState } from '../stores/slices/authSlice';
-import { removeAuthToken } from './auth';
+import { removeAuthToken,getAuthToken } from './auth';
 
 let store: any; // Declare a variable to hold the store reference
 export const setStore = (reduxStore: any) => {
@@ -16,15 +16,20 @@ const api = axios.create({
   },
 });
 
-// Request Interceptor
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    if (!store) return config; // Skip if store isn't initialized yet
+    if (!store) {
+      console.warn('[API] Store is not initialized yet. Skipping token injection.');
+      return config;
+    }
     const state = store.getState();
-    const token = state.auth.token; // Access token from Redux state
+    const token = state?.auth?.token || getAuthToken(); // Fallback to cookie
     if (token) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('[API] Authorization token attached to headers:', token);
+    } else {
+      console.warn('[API] No token found in state or cookie.');
     }
     return config;
   },
@@ -34,11 +39,15 @@ api.interceptors.request.use(
   }
 );
 
-// Response Interceptor
+
 api.interceptors.response.use(
-  (response: AxiosResponse) => response,
+  (response: AxiosResponse) => {
+    console.log('[API] Response received:', response);
+    return response;
+  },
   (error) => {
     const status = error.response?.status;
+    console.error('[API] Response interceptor error:', error);
     if (status === 401) {
       console.warn('[API] Unauthorized request. Logging out user.');
       if (store) store.dispatch(clearAuthState());
@@ -49,5 +58,6 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 
 export default api;

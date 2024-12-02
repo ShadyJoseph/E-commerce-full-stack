@@ -38,18 +38,10 @@ const Navbar: React.FC = () => {
               </span>
             </Link>
           </div>
-          <Link
-            to="/signup"
-            className="font-medium text-lg hover:text-primaryColor"
-            aria-label="Register"
-          >
-            Register
-          </Link>
           {/* Desktop Categories */}
           <div className="hidden md:flex items-center space-x-4">
             <Categories />
           </div>
-
           {/* Action Icons */}
           <div className="hidden md:flex items-center space-x-6">
             {isAuthenticated ? (

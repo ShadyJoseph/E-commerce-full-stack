@@ -86,7 +86,6 @@ export const googleLogin = createAsyncThunk<void, void, { rejectValue: string }>
   }
 );
 
-// Auth Slice
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -98,6 +97,7 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       localStorage.setItem('user', JSON.stringify(user));
       setAuthToken(token);
+      console.log('[Auth Slice] User set successfully:', user);
     },
     clearAuthState(state) {
       state.user = null;
@@ -106,6 +106,7 @@ const authSlice = createSlice({
       state.error = null;
       localStorage.removeItem('user');
       removeAuthToken();
+      console.log('[Auth Slice] Auth state cleared.');
     },
   },
   extraReducers: (builder) => {
@@ -113,6 +114,7 @@ const authSlice = createSlice({
       .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
+        console.log('[Auth Slice] Login pending...');
       })
       .addCase(login.fulfilled, (state, action) => {
         const { user, token } = action.payload;
@@ -120,14 +122,17 @@ const authSlice = createSlice({
         state.user = user;
         state.token = token;
         state.isAuthenticated = true;
+        console.log('[Auth Slice] Login successful. User:', user);
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Unexpected error occurred.';
+        console.error('[Auth Slice] Login failed:', state.error);
       })
       .addCase(signUp.pending, (state) => {
         state.loading = true;
         state.error = null;
+        console.log('[Auth Slice] Signup pending...');
       })
       .addCase(signUp.fulfilled, (state, action) => {
         const { user, token } = action.payload;
@@ -135,10 +140,12 @@ const authSlice = createSlice({
         state.user = user;
         state.token = token;
         state.isAuthenticated = true;
+        console.log('[Auth Slice] Signup successful. User:', user);
       })
       .addCase(signUp.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Unexpected error occurred.';
+        console.error('[Auth Slice] Signup failed:', state.error);
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
@@ -156,6 +163,7 @@ const authSlice = createSlice({
       });
   },
 });
+
 
 export const { setUser, clearAuthState } = authSlice.actions;
 export default authSlice.reducer;

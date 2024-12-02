@@ -5,12 +5,19 @@ export const getAuthToken = (): string | null => {
     const token = document.cookie
       .split('; ')
       .find((row) => row.startsWith(`${COOKIE_NAME}=`));
-    return token ? token.split('=')[1] : null;
+    if (!token) {
+      console.warn('[Auth] Token cookie not found.');
+      return null;
+    }
+    const parsedToken = token.split('=')[1];
+    console.log('[Auth] Retrieved auth token:', parsedToken);
+    return parsedToken;
   } catch (error) {
-    console.error('[Auth] Failed to retrieve auth token:', error);
+    console.error('[Auth] Error retrieving token:', error);
     return null;
   }
 };
+
 
 export const setAuthToken = (token: string, expiresIn: number = 86400): void => {
   try {
@@ -18,6 +25,7 @@ export const setAuthToken = (token: string, expiresIn: number = 86400): void => 
     const secureFlag = window.location.protocol === 'https:' ? 'Secure' : '';
     document.cookie = `${COOKIE_NAME}=${token}; expires=${expires}; path=/; SameSite=Strict; ${secureFlag}`;
     localStorage.setItem('token', token); // Save token in localStorage as well
+    console.log('[Auth] Token set successfully:', token);
   } catch (error) {
     console.error('[Auth] Failed to set auth token:', error);
   }
