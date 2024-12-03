@@ -49,10 +49,10 @@ const ProductsPage = () => {
           : 'bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500'
           } text-white py-28 text-center shadow-lg`}
       >
-        <h1 className="text-5xl font-extrabold mb-6">
+        <h1 className="text-5xl font-extrabold mb-6 tracking-wide animate-fadeIn">
           Explore Our <span className="underline decoration-wavy decoration-yellow-300">Products</span>
         </h1>
-        <p className="text-lg font-medium max-w-2xl mx-auto">
+        <p className="text-lg font-medium max-w-2xl mx-auto opacity-90">
           Find the perfect products tailored to your style and needs.
         </p>
       </div>
@@ -67,21 +67,13 @@ const ProductsPage = () => {
         {products.length === 0 ? (
           <p className="text-lg text-center mt-8">No products found.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((product: Product) => (
+          <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {products.map((product) => (
               <div
                 key={product.id}
-                className={`${darkMode
-                  ? 'bg-gray-800 text-white'
-                  : 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-900'
-                  } rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition transform hover:-translate-y-2 hover:scale-105`}
+                className="bg-card-light dark:bg-card-dark rounded-lg shadow-lg hover:shadow-2xl transition-transform transform hover:-translate-y-2"
               >
-                <div
-                  className={`h-56 overflow-hidden ${!product.imageUrls[0]
-                    ? 'bg-gradient-to-br from-purple-600 via-indigo-500 to-blue-500'
-                    : ''
-                    }`}
-                >
+                <div className="h-56 overflow-hidden rounded-t-lg">
                   {product.imageUrls[0] ? (
                     <img
                       src={product.imageUrls[0]}
@@ -89,18 +81,18 @@ const ProductsPage = () => {
                       className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white text-xl font-bold">
+                    <div className="flex items-center justify-center w-full h-full bg-gray-300 text-gray-500">
                       No Image Available
                     </div>
                   )}
                 </div>
-                <div className="p-6 text-center">
-                  <h3 className="text-2xl font-semibold mb-2">{product.name}</h3>
-                  <p className="text-sm text-gray-500">{product.category}</p>
-                  <p className="text-lg font-medium mt-2">${product.price}</p>
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold text-indigo-600 dark:text-indigo-400">{product.name}</h3>
+                  <p className="mt-1 text-gray-500 capitalize">{product.category}</p>
+                  <p className="mt-2 text-lg font-bold">${product.price}</p>
                   <button
                     onClick={() => handleViewDetails(product.id)}
-                    className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition transform hover:scale-105"
+                    className="mt-4 px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-transform transform hover:scale-105"
                     aria-label={`View details for ${product.name}`}
                   >
                     View Details
@@ -113,19 +105,21 @@ const ProductsPage = () => {
       </div>
 
       {/* Pagination Section */}
-      <div className="flex justify-center space-x-4 mt-8">
+      <div className="flex justify-center items-center space-x-6 mt-8">
         <button
           disabled={pagination.page <= 1}
           onClick={() => handlePageChange(pagination.page - 1)}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50 hover:bg-indigo-700 transition"
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50 hover:bg-indigo-700 transition-transform transform hover:scale-105"
         >
           Previous
         </button>
-        <span className="text-lg font-semibold">Page {pagination.page}</span>
+        <span className="text-lg font-semibold px-3 py-1 bg-indigo-100 text-indigo-700 dark:bg-indigo-800 dark:text-indigo-200 rounded-md">
+          Page {pagination.page}
+        </span>
         <button
           disabled={products.length < pagination.limit}
           onClick={() => handlePageChange(pagination.page + 1)}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50 hover:bg-indigo-700 transition"
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50 hover:bg-indigo-700 transition-transform transform hover:scale-105"
         >
           Next
         </button>
