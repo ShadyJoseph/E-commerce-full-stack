@@ -1,17 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { HiChevronDown, HiChevronUp } from 'react-icons/hi';
-import { useAppDispatch,useAppSelector } from '../hooks/reduxHooks';
-import { fetchCategories } from '../stores/slices/productSlice'; // Use the fetchCategories action from the product slice
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
+import { fetchCategories } from '../stores/slices/productSlice';
 
-const Categories: React.FC = () => {
+interface CategoriesProps {
+  onCategorySelect?: (category: string) => void;
+}
+
+const Categories: React.FC<CategoriesProps> = ({ onCategorySelect }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dispatch = useAppDispatch();
-  const darkMode = useAppSelector((state: { theme: { darkMode: boolean } }) => state.theme.darkMode);
-  
-  // Fetch product state from Redux store
-  const { categories, loading, error } = useAppSelector((state: { products: { categories: string[], loading: boolean, error: string | null } }) => state.products);
+  const navigate = useNavigate(); // Initialize useNavigate
+  const darkMode = useAppSelector((state) => state.theme.darkMode);
 
+  const { categories, loading, error } = useAppSelector((state) => state.products);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const toggleDropdown = () => {
@@ -24,7 +27,6 @@ const Categories: React.FC = () => {
     }
   }, [dispatch, categories, loading]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -37,6 +39,14 @@ const Categories: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const handleCategoryClick = (category: string) => {
+    if (onCategorySelect) {
+      onCategorySelect(category); // Trigger callback if provided
+    }
+    navigate(`/products?category=${category}`); // Navigate with query parameter
+    setIsDropdownOpen(false); // Close the dropdown
+  };
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -68,21 +78,20 @@ const Categories: React.FC = () => {
             <div className="px-4 py-2 text-red-500">{error}</div>
           ) : (
             categories.map((category) => (
-              <Link
+              <button
                 key={category}
-                to={`/${category.toLowerCase()}`}
-                className={`block px-4 py-2 text-lg font-semibold transition-colors duration-300 ${
+                onClick={() => handleCategoryClick(category)}
+                className={`w-full text-left block px-4 py-2 text-lg font-semibold transition-colors duration-300 ${
                   darkMode ? 'hover:bg-gray-700 hover:text-gray-50' : 'hover:bg-gray-100 hover:text-gray-900'
                 }`}
                 aria-label={category}
               >
                 {category}
-              </Link>
+              </button>
             ))
           )}
         </div>
       )}
-
     </div>
   );
 };

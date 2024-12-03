@@ -22,7 +22,7 @@ export interface Product {
 export interface ProductState {
   categories: string[];
   products: Product[];
-  currentProduct: Product | null; // Added currentProduct
+  currentProduct: Product | null;
   loading: boolean;
   error: string | null;
 }
@@ -31,9 +31,20 @@ export interface ProductState {
 const initialState: ProductState = {
   categories: [],
   products: [],
-  currentProduct: null, // Initialize currentProduct as null
+  currentProduct: null,
   loading: false,
   error: null,
+};
+
+// Helper function to handle async thunk states
+const handlePending = (state: ProductState) => {
+  state.loading = true;
+  state.error = null;
+};
+
+const handleRejected = (state: ProductState, action: any) => {
+  state.loading = false;
+  state.error = action.payload || 'An error occurred.';
 };
 
 // Async Thunks for Fetching Data
@@ -102,6 +113,7 @@ const productSlice = createSlice({
   initialState,
   reducers: {
     clearProductState(state) {
+      state.categories = [];
       state.products = [];
       state.currentProduct = null;
       state.error = null;
@@ -111,60 +123,36 @@ const productSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // Fetch Categories
-      .addCase(fetchCategories.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      .addCase(fetchCategories.pending, handlePending)
       .addCase(fetchCategories.fulfilled, (state, action: PayloadAction<string[]>) => {
         state.categories = action.payload;
         state.loading = false;
       })
-      .addCase(fetchCategories.rejected, (state, action) => {
-        state.error = action.payload || 'An error occurred while fetching categories.';
-        state.loading = false;
-      })
+      .addCase(fetchCategories.rejected, handleRejected)
 
       // Fetch All Products
-      .addCase(fetchAllProducts.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      .addCase(fetchAllProducts.pending, handlePending)
       .addCase(fetchAllProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
         state.products = action.payload;
         state.loading = false;
       })
-      .addCase(fetchAllProducts.rejected, (state, action) => {
-        state.error = action.payload || 'An error occurred while fetching products.';
-        state.loading = false;
-      })
+      .addCase(fetchAllProducts.rejected, handleRejected)
 
       // Fetch Products by Category
-      .addCase(fetchProductsByCategory.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      .addCase(fetchProductsByCategory.pending, handlePending)
       .addCase(fetchProductsByCategory.fulfilled, (state, action: PayloadAction<Product[]>) => {
         state.products = action.payload;
         state.loading = false;
       })
-      .addCase(fetchProductsByCategory.rejected, (state, action) => {
-        state.error = action.payload || 'An error occurred while fetching products by category.';
-        state.loading = false;
-      })
+      .addCase(fetchProductsByCategory.rejected, handleRejected)
 
-      .addCase(fetchProductById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-        state.currentProduct = null; // Reset currentProduct during loading
-      })
+      // Fetch Product by ID
+      .addCase(fetchProductById.pending, handlePending)
       .addCase(fetchProductById.fulfilled, (state, action: PayloadAction<Product>) => {
-        state.currentProduct = action.payload; // Store the fetched product
+        state.currentProduct = action.payload;
         state.loading = false;
       })
-      .addCase(fetchProductById.rejected, (state, action) => {
-        state.error = action.payload || 'An error occurred while fetching the product.';
-        state.loading = false;
-      });
+      .addCase(fetchProductById.rejected, handleRejected);
   },
 });
 

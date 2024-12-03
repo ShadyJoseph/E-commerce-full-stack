@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { fetchCategories } from '../stores/slices/productSlice';
-import { Link } from 'react-router-dom';
-
+import { Link, useNavigate } from 'react-router-dom';
 const HomeScreen: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();  // Initialize useNavigate hook
   const { categories, loading, error } = useAppSelector((state) => state.products); // Access state from the product slice
   const darkMode = useAppSelector((state: { theme: { darkMode: boolean } }) => state.theme.darkMode);
 
@@ -41,6 +41,7 @@ const HomeScreen: React.FC = () => {
           </div>
           <div className="p-8 text-center">
             <button
+              onClick={() => navigate(`/products?category=${category}`)} // Use navigate to redirect
               className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition transform hover:scale-105"
               aria-label={`Explore ${category}`}
             >
@@ -49,7 +50,7 @@ const HomeScreen: React.FC = () => {
           </div>
         </div>
       )),
-    [categories, darkMode]
+    [categories, darkMode, navigate]  // Add navigate to dependencies
   );
 
   return (
@@ -72,21 +73,18 @@ const HomeScreen: React.FC = () => {
           className="mt-6 px-8 py-4 bg-yellow-400 text-gray-900 rounded-full font-semibold hover:bg-yellow-300 transition duration-300 transform hover:scale-105"
           aria-label="Shop Now"
         >
-          <Link to="/allProducts">Shop Now</Link>
+          <Link to="/products">Shop Now</Link>
         </button>
       </div>
-
       {/* Categories Section */}
       <div className="py-16">
         <h2 className="text-4xl font-extrabold text-center mb-12">Shop by Category</h2>
         {loading ? (
           <div className="text-center text-lg font-medium text-gray-500">Loading categories...</div>
         ) : error ? (
-          <div className="text-center text-red-500 font-semibold">{error}</div>
-        ) : categories.length === 0 ? (
-          <div className="text-center text-gray-500 font-medium">No categories available</div>
+          <div className="text-center text-lg text-red-500">{error}</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {categoryCards}
           </div>
         )}
