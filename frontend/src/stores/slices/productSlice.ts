@@ -95,17 +95,29 @@ export const fetchAllProducts = createAsyncThunk<
   }
 );
 
+// Thunk for Fetching Product by ID
 export const fetchProductById = createAsyncThunk<Product, string, { rejectValue: string }>(
   'products/fetchProductById',
   async (id, { rejectWithValue }) => {
     try {
+      // API call to fetch product by ID
       const { data } = await api.get(`/products/${id}`);
-      return data.product; // Ensure `data.product` is returned by the backend
+      if (!data.product) {
+        throw new Error('No product data returned from the server.');
+      }
+      return data.product; // Return the product for the fulfilled case
     } catch (error) {
-      return rejectWithValue(extractErrorMessage(error, `Failed to fetch product with ID: ${id}.`));
+      console.error(`Error fetching product by ID: ${id}`, error); // Add debug info
+      return rejectWithValue(
+        extractErrorMessage(
+          error,
+          `Failed to fetch product with ID: ${id}. Please try again later.`
+        )
+      );
     }
   }
 );
+
 
 // Product Slice
 const productSlice = createSlice({
@@ -146,13 +158,17 @@ const productSlice = createSlice({
       })
       .addCase(fetchProductsByCategory.rejected, handleRejected)
 
-      // Fetch Product by ID
+      // Slice Reducer for Fetch Product by ID
       .addCase(fetchProductById.pending, handlePending)
       .addCase(fetchProductById.fulfilled, (state, action: PayloadAction<Product>) => {
-        state.currentProduct = action.payload;
-        state.loading = false;
+        state.currentProduct = action.payload; // Assign the fetched product
+        state.loading = false; // Clear loading state
+        state.error = null; // Clear previous errors, if any
       })
-      .addCase(fetchProductById.rejected, handleRejected);
+      .addCase(fetchProductById.rejected, (state, action) => {
+        state.loading = false; // Stop loading
+        state.error = action.payload || 'An unexpected error occurred while fetching the product.'; // Handle rejection
+      });
   },
 });
 

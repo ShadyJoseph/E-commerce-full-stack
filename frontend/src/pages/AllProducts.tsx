@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchAllProducts, Product } from '../stores/slices/productSlice';
+import { fetchAllProducts } from '../stores/slices/productSlice';
 import Categories from '../components/fullScreenCategories';
 import Loader from '../components/Loader';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
@@ -20,16 +20,22 @@ const ProductsPage = () => {
     gender: undefined as 'men' | 'women' | 'unisex' | undefined,
   });
 
+  // Fetch products whenever pagination changes
   useEffect(() => {
     dispatch(fetchAllProducts(pagination));
   }, [dispatch, pagination]);
 
+  // Handlers
   const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
   };
 
   const handleViewDetails = (id: string) => {
-    navigate(`/products/${id}`);
+    if (id) {
+      navigate(`/products/${id}`);
+    } else {
+      console.error('Invalid product ID: Cannot navigate.');
+    }
   };
 
   const handleCategoryChange = (category: string) => {
@@ -37,13 +43,28 @@ const ProductsPage = () => {
     navigate(`/products?category=${category}`);
   };
 
+  // Render loading state
   if (loading) return <Loader />;
-  if (error) return <p className="text-red-500 text-center mt-8">{error}</p>;
+
+  // Render error state
+  if (error) {
+    return (
+      <div className="text-center mt-8">
+        <p className="text-red-500 text-lg">Failed to load products. {error}</p>
+        <button
+          onClick={() => dispatch(fetchAllProducts(pagination))}
+          className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-transform transform hover:scale-105"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className={`${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} min-h-screen`}>
       {/* Banner Section */}
-      <div
+      <header
         className={`${darkMode
           ? 'bg-gradient-to-r from-purple-700 via-indigo-600 to-blue-700'
           : 'bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500'
@@ -55,15 +76,15 @@ const ProductsPage = () => {
         <p className="text-lg font-medium max-w-2xl mx-auto opacity-90">
           Find the perfect products tailored to your style and needs.
         </p>
-      </div>
+      </header>
 
       {/* Categories Section */}
-      <div className="py-12 relative z-50">
+      <section className="py-12 relative z-50">
         <Categories onCategorySelect={handleCategoryChange} />
-      </div>
+      </section>
 
       {/* Products Section */}
-      <div className="container mx-auto py-8 px-4">
+      <main className="container mx-auto py-8 px-4">
         {products.length === 0 ? (
           <p className="text-lg text-center mt-8">No products found.</p>
         ) : (
@@ -74,7 +95,7 @@ const ProductsPage = () => {
                 className="bg-card-light dark:bg-card-dark rounded-lg shadow-lg hover:shadow-2xl transition-transform transform hover:-translate-y-2"
               >
                 <div className="h-56 overflow-hidden rounded-t-lg">
-                  {product.imageUrls[0] ? (
+                  {product.imageUrls && product.imageUrls[0] ? (
                     <img
                       src={product.imageUrls[0]}
                       alt={product.name}
@@ -102,10 +123,10 @@ const ProductsPage = () => {
             ))}
           </div>
         )}
-      </div>
+      </main>
 
       {/* Pagination Section */}
-      <div className="flex justify-center items-center space-x-6 mt-8">
+      <footer className="flex justify-center items-center space-x-6 mt-8">
         <button
           disabled={pagination.page <= 1}
           onClick={() => handlePageChange(pagination.page - 1)}
@@ -123,7 +144,7 @@ const ProductsPage = () => {
         >
           Next
         </button>
-      </div>
+      </footer>
     </div>
   );
 };
