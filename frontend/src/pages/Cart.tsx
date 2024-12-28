@@ -14,7 +14,7 @@ const Cart = () => {
     dispatch(fetchCart());
   }, [dispatch]);
 
-  const handleRemove = (productId: string, size: string) => {
+  const handleRemove = (productId: number, size: string) => {
     dispatch(removeFromCart({ productId, size }));
   };
 

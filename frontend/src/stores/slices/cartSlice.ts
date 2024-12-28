@@ -5,7 +5,7 @@ import { extractErrorMessage } from '../../utils/errorHandler';
 // Define CartItem and CartState interfaces
 interface CartItem {
   product: {
-    _id: string;
+    _id: number;
     name: string;
     price: number;
     imageUrls: string[];
@@ -13,7 +13,7 @@ interface CartItem {
   };
   size: string;
   quantity: number;
-  _id: string;
+  _id: number;
 }
 
 interface CartState {
@@ -47,21 +47,23 @@ export const fetchCart = createAsyncThunk<CartItem[], void, { rejectValue: strin
 // Add to Cart
 export const addToCart = createAsyncThunk<
   CartItem[],
-  { productId: string; size: string; quantity: number },
+  { productId: number; size: string; quantity: number },
   { rejectValue: string }
 >('cart/addToCart', async ({ productId, size, quantity }, { rejectWithValue }) => {
   try {
     const response = await api.post('users/cart', { productId, size, quantity });
     return response.data.cart;
   } catch (error: any) {
-    return rejectWithValue(extractErrorMessage(error, 'Failed to add item to cart'));
+    const errorMessage = extractErrorMessage(error, 'Failed to add item to cart');
+    return rejectWithValue(errorMessage);
   }
 });
+
 
 // Remove from Cart
 export const removeFromCart = createAsyncThunk<
   CartItem[],
-  { productId: string; size: string },
+  { productId: number; size: string },
   { rejectValue: string }
 >('cart/removeFromCart', async ({ productId, size }, { rejectWithValue }) => {
   try {

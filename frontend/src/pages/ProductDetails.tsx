@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom';
 import { fetchProductById } from '../stores/slices/productSlice';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import Loader from '../components/Loader';
-import { FaShoppingCart, FaCreditCard } from 'react-icons/fa';
+import { FaShoppingCart } from 'react-icons/fa';
+import { addToCart } from '../stores/slices/cartSlice'
 
 const ProductDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,20 +25,27 @@ const ProductDetails = () => {
   }, [dispatch, id]);
 
   const handleAddToCart = () => {
-    if (selectedColor && selectedSize && quantity > 0) {
-      console.log(`Adding to cart: ${selectedColor} - ${selectedSize} - Quantity: ${quantity}`);
-    } else {
-      console.error('Please select a color, size, and valid quantity.');
+    if (!currentProduct || !selectedColor || !selectedSize || quantity <= 0) {
+      console.error('Please select a product, color, size, and valid quantity.');
+      return;
     }
+  
+    dispatch(
+      addToCart({
+        productId: currentProduct._id,
+        size: selectedSize,
+        quantity,
+      })
+    )
+      .unwrap()
+      .then(() => {
+        console.log('Item added to cart successfully!');
+      })
+      .catch((error: any) => {
+        console.error('Error adding item to cart:', error);
+      });
   };
-
-  const handleBuyNow = () => {
-    if (selectedColor && selectedSize && quantity > 0) {
-      console.log(`Buying now: ${selectedColor} - ${selectedSize} - Quantity: ${quantity}`);
-    } else {
-      console.error('Please select a color, size, and valid quantity.');
-    }
-  };
+  
 
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity > 0) setQuantity(newQuantity);
@@ -168,18 +176,6 @@ const ProductDetails = () => {
                 aria-label="Add to cart"
               >
                 <FaShoppingCart className="mr-2" /> Add to Cart
-              </button>
-              <button
-                onClick={handleBuyNow}
-                disabled={!selectedColor || !selectedSize || quantity <= 0}
-                className="
-                  flex items-center justify-center px-8 py-3 rounded-lg shadow-lg
-                  bg-green-600 text-white font-semibold transition-all duration-300
-                  hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 disabled:opacity-50 disabled:cursor-not-allowed
-                "
-                aria-label="Buy Now"
-              >
-                <FaCreditCard className="mr-2" /> Buy Now
               </button>
             </div>
           </div>
