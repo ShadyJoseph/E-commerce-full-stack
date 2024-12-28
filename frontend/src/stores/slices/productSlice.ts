@@ -3,7 +3,7 @@ import api from '../../api/axiosConfig';
 import { extractErrorMessage } from '../../utils/errorHandler';
 
 export interface Product {
-  id: string;
+  _id: number;
   name: string;
   description: string;
   price: number;
@@ -13,10 +13,7 @@ export interface Product {
   discount: number;
   season?: string;
   gender?: 'men' | 'women' | 'unisex';
-  colors: Array<{
-    color: string;
-    availableSizes: Array<{ size: string; stock: number }>;
-  }>;
+  colors: { color: string; availableSizes: { size: string; stock: number }[] }[];
 }
 
 export interface ProductState {

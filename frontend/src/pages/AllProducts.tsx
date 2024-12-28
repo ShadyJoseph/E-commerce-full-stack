@@ -30,7 +30,7 @@ const ProductsPage = () => {
     setPagination((prev) => ({ ...prev, page: newPage }));
   };
 
-  const handleViewDetails = (id: string) => {
+  const handleViewDetails = (id: number) => {
     if (id) {
       navigate(`/products/${id}`);
     } else {
@@ -91,7 +91,7 @@ const ProductsPage = () => {
           <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((product) => (
               <div
-                key={product.id}
+                key={product._id}
                 className="bg-card-light dark:bg-card-dark rounded-lg shadow-lg hover:shadow-2xl transition-transform transform hover:-translate-y-2"
               >
                 <div className="h-56 overflow-hidden rounded-t-lg">
@@ -112,7 +112,7 @@ const ProductsPage = () => {
                   <p className="mt-1 text-gray-500 capitalize">{product.category}</p>
                   <p className="mt-2 text-lg font-bold">${product.price}</p>
                   <button
-                    onClick={() => handleViewDetails(product.id)}
+                    onClick={() => handleViewDetails(product._id)}
                     className="mt-4 px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-transform transform hover:scale-105"
                     aria-label={`View details for ${product.name}`}
                   >
