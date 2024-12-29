@@ -4,9 +4,11 @@ import { RootState } from '../stores/store';
 import { fetchCart, removeFromCart } from '../stores/slices/cartSlice';
 import Loader from '../components/Loader';
 import { useAppDispatch } from '../hooks/reduxHooks';
+import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { items, isLoading, error } = useSelector((state: RootState) => state.cart);
   const { darkMode } = useSelector((state: RootState) => state.theme);
 
@@ -24,10 +26,10 @@ const Cart = () => {
   return (
     <div
       className={`${
-        darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
+        darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
       } min-h-screen py-12 px-6 md:px-12 transition-all`}
     >
-      <h1 className="text-5xl font-extrabold mb-12 text-center">
+      <h1 className="text-4xl font-extrabold mb-12 text-center">
         Your Cart
       </h1>
       {items.length === 0 ? (
@@ -35,59 +37,71 @@ const Cart = () => {
           Your cart is currently empty. Start shopping now!
         </p>
       ) : (
-        <div className="grid grid-cols-1 gap-8 max-w-5xl mx-auto md:grid-cols-2 xl:grid-cols-3">
-          {items.map((item) => (
-            <div
-              key={item._id}
-              className={`${
-                darkMode ? 'bg-gray-800' : 'bg-white'
-              } flex flex-col items-center p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow`}
-            >
-              <div className="flex items-center space-x-6">
+        <div className="max-w-7xl mx-auto space-y-12">
+          <div className="space-y-6">
+            {items.map((item) => (
+              <div
+                key={item._id}
+                className={`${
+                  darkMode ? 'bg-gray-800' : 'bg-white'
+                } flex flex-col md:flex-row items-center p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow`}
+              >
                 <img
                   src={item.product.imageUrls?.[0] || '/placeholder.png'}
                   alt={item.product.name}
-                  className="w-32 h-32 object-cover rounded-lg shadow-md"
+                  className="w-32 h-32 object-cover rounded-lg shadow-md md:w-40 md:h-40"
                 />
-                <div className="flex flex-col space-y-2">
-                  <h3 className="text-xl font-semibold">{item.product.name}</h3>
-                  <p className="text-sm text-gray-400">
-                    Size: <span className="font-medium text-gray-600">{item.size}</span>
+                <div className="flex-grow px-6">
+                  <h3 className="text-lg font-semibold mb-2">
+                    {item.product.name}
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-1">
+                    <span className="font-medium">Size:</span> {item.size}
                   </p>
-                  <p className="text-sm text-gray-400">
-                    Quantity: <span className="font-medium text-gray-600">{item.quantity}</span>
+                  <p className="text-sm text-gray-500">
+                    <span className="font-medium">Quantity:</span> {item.quantity}
                   </p>
                 </div>
+                <div className="flex flex-col items-end space-y-2">
+                  <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                    ${item.product.price * item.quantity}
+                  </p>
+                  <button
+                    onClick={() => handleRemove(item.product._id, item.size)}
+                    className="text-sm bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md transition-transform hover:scale-105"
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
-              <div className="flex flex-col items-end space-y-4 mt-6">
-                <p className="text-xl font-bold text-indigo-600">
-                  ${item.product.price * item.quantity}
-                </p>
-                <button
-                  onClick={() => handleRemove(item.product._id, item.size)}
-                  className="bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-lg transition-transform transform hover:scale-105"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
+
           <div
             className={`${
               darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
-            } p-8 rounded-lg shadow-lg col-span-1 md:col-span-2 xl:col-span-3`}
+            } p-6 rounded-lg shadow-lg space-y-6`}
           >
-            <h2 className="text-3xl font-semibold text-right">
-              Total: ${items.reduce(
-                (acc, item) => acc + item.product.price * item.quantity,
-                0
-              ).toFixed(2)}
+            <h2 className="text-2xl font-semibold text-right">
+              Total: $
+              {items
+                .reduce((acc, item) => acc + item.product.price * item.quantity, 0)
+                .toFixed(2)}
             </h2>
-            <button
-              className="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg mt-6 transition-transform transform hover:scale-105 float-right"
-            >
-              Proceed to Checkout
-            </button>
+            <div className="flex justify-between space-x-4">
+              <button
+                onClick={() => navigate('/products')}
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-md transition-transform hover:scale-105"
+              >
+                Continue Shopping
+              </button>
+              <button
+                onClick={() => navigate('/checkout')}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-md transition-transform hover:scale-105"
+              >
+                Proceed to Checkout
+              </button>
+            </div>
           </div>
         </div>
       )}

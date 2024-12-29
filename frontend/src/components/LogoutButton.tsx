@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FiLogOut } from 'react-icons/fi';
 import ConfirmationModal from './ConfirmationModal';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks'
-import { logout } from '../stores/slices/authSlice'; // Import the logout action
+import { logout } from '../stores/slices/authSlice';
 
 const LogoutButton: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,7 +22,7 @@ const LogoutButton: React.FC = () => {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="text-lg transition-colors transition-transform transform hover:scale-110 hover:text-primaryColor"
+        className="text-lg flex items-center space-x-2 hover:text-indigo-600 transform hover:scale-110 transition-transform duration-300"
         aria-label="Logout"
       >
         <FiLogOut className="w-6 h-6" />

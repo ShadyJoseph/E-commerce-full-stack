@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import Loader from './components/Loader';
+import CheckOut from './pages/Checkout';
 
 const NotFound = lazy(() => import('./pages/NotFound'));
 const SignIn = lazy(() => import('./pages/SignIn'));
@@ -26,6 +27,7 @@ function App() {
           <Route path="/cart" element={<MainLayout><Cart /></MainLayout>} />
           <Route path="/products" element={<MainLayout><AllProducts /></MainLayout>} />
           <Route path="/products/:id" element={<MainLayout><ProductDetails /></MainLayout>} />
+          <Route path="checkout" element={<MainLayout><CheckOut /></MainLayout>} />
 
           {/* Routes without Navbar */}
           <Route path="/google/callback" element={<NoNavbarLayout><GoogleCallback /></NoNavbarLayout>} />
