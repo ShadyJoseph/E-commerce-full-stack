@@ -4,10 +4,10 @@ import { fetchProductById } from '../stores/slices/productSlice';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import Loader from '../components/Loader';
 import { FaShoppingCart } from 'react-icons/fa';
-import { addToCart } from '../stores/slices/cartSlice'
+import { addToCart } from '../stores/slices/cartSlice';
 
 const ProductDetails = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>(); 
   const dispatch = useAppDispatch();
   const { currentProduct, loading, error } = useAppSelector((state) => state.products);
   const darkMode = useAppSelector((state) => state.theme.darkMode);
@@ -18,7 +18,8 @@ const ProductDetails = () => {
 
   useEffect(() => {
     if (id) {
-      dispatch(fetchProductById(id));
+      // Ensure the id is treated as a string before dispatching
+      dispatch(fetchProductById(String(id)));  // Stringify the id
     } else {
       console.error('Product ID is undefined. Please check the navigation or route definition.');
     }
@@ -29,12 +30,13 @@ const ProductDetails = () => {
       console.error('Please select a product, color, size, and valid quantity.');
       return;
     }
-  
+
     dispatch(
       addToCart({
-        productId: currentProduct._id,
+        productId: String(currentProduct._id),  // Stringify the productId
         size: selectedSize,
         quantity,
+        color: selectedColor,
       })
     )
       .unwrap()
@@ -45,7 +47,6 @@ const ProductDetails = () => {
         console.error('Error adding item to cart:', error);
       });
   };
-  
 
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity > 0) setQuantity(newQuantity);

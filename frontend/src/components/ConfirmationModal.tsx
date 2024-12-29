@@ -18,7 +18,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-30 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity duration-300 m-0 p-0"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity duration-300 m-0 p-0"
       style={{ margin: 0, padding: 0 }} // Ensure no margin or padding
     >
       <div

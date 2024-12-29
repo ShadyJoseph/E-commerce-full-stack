@@ -14,7 +14,7 @@ const Cart = () => {
     dispatch(fetchCart());
   }, [dispatch]);
 
-  const handleRemove = (productId: number, size: string) => {
+  const handleRemove = (productId: string, size: string) => {
     dispatch(removeFromCart({ productId, size }));
   };
 
@@ -25,39 +25,47 @@ const Cart = () => {
     <div
       className={`${
         darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
-      } min-h-screen py-12 px-6 md:px-12`}
+      } min-h-screen py-12 px-6 md:px-12 transition-all`}
     >
-      <h1 className="text-5xl font-extrabold mb-12 text-center">Your Cart</h1>
+      <h1 className="text-5xl font-extrabold mb-12 text-center">
+        Your Cart
+      </h1>
       {items.length === 0 ? (
-        <p className="text-xl font-medium text-center">Your cart is currently empty. Start shopping now!</p>
+        <p className="text-xl font-medium text-center">
+          Your cart is currently empty. Start shopping now!
+        </p>
       ) : (
-        <div className="space-y-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 gap-8 max-w-5xl mx-auto md:grid-cols-2 xl:grid-cols-3">
           {items.map((item) => (
             <div
               key={item._id}
               className={`${
                 darkMode ? 'bg-gray-800' : 'bg-white'
-              } flex flex-col md:flex-row items-center justify-between p-8 rounded-lg shadow-lg transition-transform transform hover:scale-105`}
+              } flex flex-col items-center p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow`}
             >
-              <div className="flex items-center space-x-8">
+              <div className="flex items-center space-x-6">
                 <img
-                  src={item.product.imageUrls[0] || '/placeholder.png'}
+                  src={item.product.imageUrls?.[0] || '/placeholder.png'}
                   alt={item.product.name}
-                  className="w-28 h-28 object-cover rounded-lg shadow-md"
+                  className="w-32 h-32 object-cover rounded-lg shadow-md"
                 />
-                <div className="flex flex-col space-y-3">
-                  <h3 className="text-2xl font-semibold">{item.product.name}</h3>
-                  <p className="text-md text-gray-400">Size: <span className="font-medium text-gray-600">{item.size}</span></p>
-                  <p className="text-md text-gray-400">Quantity: <span className="font-medium text-gray-600">{item.quantity}</span></p>
+                <div className="flex flex-col space-y-2">
+                  <h3 className="text-xl font-semibold">{item.product.name}</h3>
+                  <p className="text-sm text-gray-400">
+                    Size: <span className="font-medium text-gray-600">{item.size}</span>
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    Quantity: <span className="font-medium text-gray-600">{item.quantity}</span>
+                  </p>
                 </div>
               </div>
-              <div className="flex flex-col items-end space-y-4 mt-6 md:mt-0">
-                <p className="text-2xl font-bold text-indigo-600">
+              <div className="flex flex-col items-end space-y-4 mt-6">
+                <p className="text-xl font-bold text-indigo-600">
                   ${item.product.price * item.quantity}
                 </p>
                 <button
                   onClick={() => handleRemove(item.product._id, item.size)}
-                  className="bg-red-500 hover:bg-red-600 text-white py-3 px-6 rounded-lg transition-transform transform hover:scale-105"
+                  className="bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-lg transition-transform transform hover:scale-105"
                 >
                   Remove
                 </button>
@@ -67,11 +75,10 @@ const Cart = () => {
           <div
             className={`${
               darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
-            } p-8 rounded-lg shadow-lg`}
+            } p-8 rounded-lg shadow-lg col-span-1 md:col-span-2 xl:col-span-3`}
           >
-            <h2 className="text-3xl font-bold text-right">
-              Total: $
-              {items.reduce(
+            <h2 className="text-3xl font-semibold text-right">
+              Total: ${items.reduce(
                 (acc, item) => acc + item.product.price * item.quantity,
                 0
               ).toFixed(2)}

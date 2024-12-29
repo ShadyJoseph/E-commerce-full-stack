@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from '../stores/store'; // Import RootState
+import { RootState } from '../stores/store';
 import Loader from './Loader';
+import classNames from 'classnames';
 
 interface GoogleSignInButtonProps {
   isLoading: boolean;
@@ -10,31 +11,36 @@ interface GoogleSignInButtonProps {
 }
 
 const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ isLoading, onClick, mssg }) => {
-  // Access the darkMode state from Redux store
   const darkMode = useSelector((state: RootState) => state.theme.darkMode);
 
-  // Conditional class names for the button
-  const buttonClasses = `flex items-center justify-center w-full h-12 px-6 text-gray-700 dark:text-gray-200 font-semibold rounded-full border transition-all ${
-    isLoading
-      ? 'bg-gray-200 dark:bg-gray-700 cursor-not-allowed'
-      : darkMode
-      ? 'bg-gray-800 dark:bg-gray-700 border-gray-600 dark:border-gray-600 hover:bg-gray-700 dark:hover:bg-gray-600 shadow-sm hover:shadow-lg'
-      : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-sm hover:shadow-lg'
-  }`;
+  const buttonClasses = useMemo(() => {
+    return classNames(
+      'flex items-center justify-center w-full h-12 px-6 font-semibold rounded-full border transition-all',
+      {
+        'bg-gray-200 dark:bg-gray-700 cursor-not-allowed': isLoading,
+        'bg-gray-800 dark:bg-gray-700 border-gray-600 hover:bg-gray-700 dark:hover:bg-gray-600 shadow-sm hover:shadow-lg': darkMode && !isLoading,
+        'bg-white dark:bg-gray-800 border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-sm hover:shadow-lg': !darkMode && !isLoading,
+        'text-gray-700 dark:text-gray-200': !isLoading,
+      }
+    );
+  }, [isLoading, darkMode]);
 
-  // Conditional text color for the message
-  const messageClasses = `transition-colors duration-300 ${
-    darkMode ? 'text-gray-200' : 'text-gray-700'
-  }`;
+  const messageClasses = useMemo(() => {
+    return classNames('transition-colors duration-300', {
+      'text-gray-200': darkMode,
+      'text-gray-700': !darkMode,
+    });
+  }, [darkMode]);
 
   return (
     <div className="flex items-center justify-center w-full">
       <button
         onClick={onClick}
         disabled={isLoading}
-        aria-label={mssg} // Describes the action
+        aria-label={mssg}
+        aria-busy={isLoading}
         className={buttonClasses}
-        aria-live={isLoading ? 'assertive' : 'off'} // Ensures the loading state is announced
+        aria-live={isLoading ? 'assertive' : 'off'}
       >
         {isLoading ? (
           <Loader height="25" width="25" aria-label="Loading..." />
