@@ -59,10 +59,9 @@ export const addToCart = createAsyncThunk<
   }
 });
 
-// Remove from Cart
 export const removeFromCart = createAsyncThunk<
   CartItem[],
-  { productId: string; size: string }, // Updated payload type to use string for productId
+  { productId: string; size: string },
   { rejectValue: string }
 >('cart/removeFromCart', async ({ productId, size }, { rejectWithValue }) => {
   try {
@@ -72,6 +71,7 @@ export const removeFromCart = createAsyncThunk<
     return rejectWithValue(extractErrorMessage(error, 'Failed to remove item from cart'));
   }
 });
+
 
 // Cart Slice
 const cartSlice = createSlice({

@@ -141,28 +141,29 @@ const ProductDetails = () => {
               </div>
             </div>
 
-            {/* Quantity Selector */}
-            <div className="mt-6">
-              <h2 className="text-lg font-semibold mb-2">Quantity</h2>
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => handleQuantityChange(quantity - 1)}
-                  className="px-4 py-2 border rounded-lg text-lg font-bold bg-gray-300 dark:bg-gray-800 hover:bg-indigo-300 dark:hover:bg-indigo-700 transition-all duration-300 shadow-lg"
-                  disabled={quantity <= 1}
-                >
-                  -
-                </button>
-                <span className="text-2xl font-semibold text-indigo-600 dark:text-indigo-300">
-                  {quantity}
-                </span>
-                <button
-                  onClick={() => handleQuantityChange(quantity + 1)}
-                  className="px-4 py-2 border rounded-lg text-lg font-bold bg-gray-300 dark:bg-gray-800 hover:bg-indigo-300 dark:hover:bg-indigo-700 transition-all duration-300 shadow-lg"
-                >
-                  +
-                </button>
-              </div>
-            </div>
+           {/* Quantity Selector */}
+<div className="mt-6">
+  <h2 className="text-lg font-semibold mb-2">Quantity</h2>
+  <div className="flex items-center space-x-4">
+    <button
+      onClick={() => handleQuantityChange(quantity - 1)}
+      className="px-5 py-3 border rounded-lg text-lg font-bold bg-gray-400 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-indigo-400 dark:hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 transition-all duration-300 shadow-lg"
+      disabled={quantity <= 1}
+    >
+      -
+    </button>
+    <span className="text-2xl font-semibold text-indigo-600 dark:text-indigo-300">
+      {quantity}
+    </span>
+    <button
+      onClick={() => handleQuantityChange(quantity + 1)}
+      className="px-5 py-3 border rounded-lg text-lg font-bold bg-gray-400 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-indigo-400 dark:hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 transition-all duration-300 shadow-lg"
+    >
+      +
+    </button>
+  </div>
+</div>
+
 
             {/* Action Buttons */}
             <div className="mt-8 flex space-x-4">

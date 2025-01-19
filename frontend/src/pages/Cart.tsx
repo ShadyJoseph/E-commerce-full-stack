@@ -17,7 +17,7 @@ const Cart = () => {
   }, [dispatch]);
 
   const handleRemove = (productId: string, size: string) => {
-    dispatch(removeFromCart({ productId, size }));
+    dispatch(removeFromCart({ productId, size }))
   };
 
   if (isLoading) return <Loader />;
