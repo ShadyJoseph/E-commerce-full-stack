@@ -45,7 +45,7 @@ app.use(passport.initialize());
 // CORS Setup
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? 'https://yourproductiondomain.com'
+    ? 'https://e-commerce-full-stack-git-main-shady-josephs-projects.vercel.app/'
     : ['http://localhost:3000', 'http://localhost:5000'],
   credentials: true,
 };
