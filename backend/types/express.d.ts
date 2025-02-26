@@ -5,3 +5,5 @@ declare global {
     interface User extends IUser {}
   }
 }
+
+export {}; 
